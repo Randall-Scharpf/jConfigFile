@@ -20,9 +20,9 @@ runs:
         java-version: '11'
         distribution: 'temurin'
     - run: |
-        wget https://dlcdn.apache.org//ant/ivy/$INPUT_IVY_VERSION/apache-ivy-$INPUT_IVY_VERSION-bin.tar.gz
-        echo $INPUT_IVY_SHA512 apache-ivy-$INPUT_IVY_VERSION-bin.tar.gz > download.sha512sum
+        wget https://dlcdn.apache.org//ant/ivy/$IVY_VERSION/apache-ivy-$IVY_VERSION-bin.tar.gz
+        echo $IVY_SHA512 apache-ivy-$IVY_VERSION-bin.tar.gz > download.sha512sum
         sha512sum -c download.sha512sum
-        tar xzf apache-ivy-$INPUT_IVY_VERSION-bin.tar.gz
-        cp apache-ivy-$INPUT_IVY_VERSION/ivy-$INPUT_IVY_VERSION.jar '$ANT_HOME'
+        tar xzf apache-ivy-$IVY_VERSION-bin.tar.gz
+        cp apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar '$ANT_HOME'
       shell: bash
