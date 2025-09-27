@@ -23,10 +23,12 @@ runs:
         if ((Get-Content -Path download.sha512)[1] -eq $IVY_SHA512) {
           tar.exe xzf apache-ivy-$IVY_VERSION-bin.tar.gz
           $ant_home = (ant.bat get_ant_home | findstr.exe echo).split(' ', 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
-          Copy-Item -Path "apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar" -Destination "$ant_home"
-          cp  `ant.bat get_ant_home | grep echo | sed 's/^.*\[echo\] \(.*\)/\1/'`/lib
+          Copy-Item -Path "apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar" -Destination "$ant_home/lib"
           dir C:\ProgramData\chocolatey\lib\ant\tools\apache-ant-1.10.15
           dir C:\ProgramData\chocolatey\lib\ant\tools\apache-ant-1.10.15\lib
+          echo "$ant_home"
+          dir "$ant_home"
+          dir "$ant_home/lib"
         } else {
           exit 1
         }
