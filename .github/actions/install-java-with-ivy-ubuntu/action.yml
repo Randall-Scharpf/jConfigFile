@@ -24,5 +24,5 @@ runs:
         echo $IVY_SHA512 apache-ivy-$IVY_VERSION-bin.tar.gz > download.sha512sum
         sha512sum -c download.sha512sum
         tar xzf apache-ivy-$IVY_VERSION-bin.tar.gz
-        cp apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar '$ANT_HOME'
+        cp apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar `ant get_ant_home | grep echo | sed 's/^.*\[echo\] \(.*\)/\1/'`
       shell: bash

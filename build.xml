@@ -8,6 +8,10 @@
     <property name="DIST" location="dist"/>
     <property name="TEST_RESULTS" location="test_results"/>
 
+    <target name="get_ant_home">
+        <echo message="${ant.home}"/>
+    </target>
+
     <target name="clean">
         <delete dir="${BUILD}"/>
         <delete dir="${DIST}"/>
