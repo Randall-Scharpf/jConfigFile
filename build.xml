@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="jConfigFile" default="default" basedir=".">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="jConfigFile" default="clean jar" basedir=".">
     <description>ANT build script for project jConfigFile</description>
 
     <property name="src" location="src"/>
@@ -12,6 +12,13 @@
         <delete dir="${build}"/>
         <delete dir="${dist}"/>
         <delete dir="${test_results}"/>
+        <ivy:cleancache/>
+    </target>
+
+    <target name="fetch_maven" unless="ivy_done">
+        <ivy:resolve/>
+        <ivy:cachepath pathid="maven_deps"/>
+        <property name="ivy_done" value="true"/>
     </target>
 
     <target name="compile">
@@ -25,11 +32,11 @@
         </copy>
     </target>
 
-    <target name="compile_test" depends="compile">
+    <target name="compile_test" depends="compile,fetch_maven">
         <mkdir dir="${build}"/>
         <javac includeantruntime="false" srcdir="${test}" destdir="${build}">
             <classpath>
-                <fileset dir="D:/Files/Downloads/junit/"/>
+                <path refid="maven_deps"/>
             </classpath>
         </javac>
         <copy todir="${build}">
