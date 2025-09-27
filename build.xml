@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="jConfigFile" default="default" basedir=".">
+    <description>ANT build script for project jConfigFile</description>
+
+    <property name="src" location="src"/>
+    <property name="build" location="build"/>
+    <property name="dist" location="dist"/>
+
+    <target name="clean">
+        <delete dir="${build}"/>
+        <delete dir="${dist}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${build}"/>
+        <javac includeantruntime="false" srcdir="${src}" destdir="${build}"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${dist}"/>
+        <jar jarfile="${dist}/jConfigFile.jar" basedir="${build}"/>
+    </target>
+
+    <target name="run" depends="jar">
+        <exec dir="bin" executable="launcher.exe">
+            <arg file="${dist.jar}"/>
+        </exec>
+    </target>
+</project>

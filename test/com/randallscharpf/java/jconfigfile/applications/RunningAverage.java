@@ -5,10 +5,7 @@
 package com.randallscharpf.java.jconfigfile.applications;
 
 import com.randallscharpf.java.jconfigfile.Config;
-import com.randallscharpf.java.jconfigfile.Config;
 import com.randallscharpf.java.jconfigfile.ConfigFile;
-import com.randallscharpf.java.jconfigfile.ConfigFile;
-import com.randallscharpf.java.jconfigfile.ConfigFinder;
 import com.randallscharpf.java.jconfigfile.ConfigFinder;
 import java.io.IOException;
 import java.util.Scanner;
