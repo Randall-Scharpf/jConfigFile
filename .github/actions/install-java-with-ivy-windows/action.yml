@@ -25,6 +25,8 @@ runs:
           $ant_home = (ant.bat get_ant_home | findstr.exe echo).split(' ', 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
           Copy-Item -Path "apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar" -Destination "$ant_home"
           cp  `ant.bat get_ant_home | grep echo | sed 's/^.*\[echo\] \(.*\)/\1/'`/lib
+          dir C:\ProgramData\chocolatey\lib\ant\tools\apache-ant-1.10.15
+          dir C:\ProgramData\chocolatey\lib\ant\tools\apache-ant-1.10.15\lib
         } else {
           exit 1
         }
