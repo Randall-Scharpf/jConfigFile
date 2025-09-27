@@ -25,3 +25,4 @@ runs:
         sha512sum -c download.sha512sum
         tar xzf apache-ivy-$IVY_VERSION-bin.tar.gz
         cp apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar '$ANT_HOME'
+      shell: bash
