@@ -22,7 +22,7 @@ runs:
         echo $env:IVY_SHA512 apache-ivy-$env:IVY_VERSION-bin.tar.gz > download.sha512sum
         if ((Get-Content -Path download.sha512)[1] -eq $env:IVY_SHA512) {
           tar.exe xzf apache-ivy-$env:IVY_VERSION-bin.tar.gz
-          $env:ant_home = (ant.bat get_ant_home | findstr.exe echo).split(' ', 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
+          $env:ant_home = (ant get_ant_home | findstr.exe echo).split(' ', 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
           Copy-Item -Path "apache-ivy-$env:IVY_VERSION/ivy-$env:IVY_VERSION.jar" -Destination "$env:ant_home/lib"
         } else {
           exit 1
