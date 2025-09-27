@@ -19,7 +19,7 @@ jobs:
           ant clean jar
       - uses: actions/upload-artifact@v4
         with:
-          name: build_jar_artifacts
+          name: build_artifacts
           path: dist
 
   run_tests_linux:
@@ -36,6 +36,7 @@ jobs:
           ant clean test
       - uses: actions/upload-artifact@v4
         with:
+          name: linux_test_results
           path: test_results
 
   run_tests_windows:

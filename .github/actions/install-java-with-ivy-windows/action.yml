@@ -1,0 +1,25 @@
+name: 'Install Java 11 and Ivy on Windows'
+description: 'Installs Java 11 and Apache Ivy for Any on Windows (latest)'
+
+inputs:
+  ivy_version:
+    description: 'which version of the ivy to install'
+    required: true
+  ivy_sha512:
+    description: 'sha512 checksum of ivy distribution tar.gz file'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    - run: |
+        wget https://dlcdn.apache.org//ant/ivy/$IVY_VERSION/apache-ivy-$IVY_VERSION-bin.tar.gz
+        echo $IVY_SHA512 apache-ivy-$IVY_VERSION-bin.tar.gz > download.sha512sum
+        sha512sum -c download.sha512sum
+        tar xzf apache-ivy-$IVY_VERSION-bin.tar.gz
+        cp apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar `ant get_ant_home | grep echo | sed 's/^.*\[echo\] \(.*\)/\1/'`/lib
+      shell: bash

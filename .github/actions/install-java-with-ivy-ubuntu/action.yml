@@ -1,10 +1,7 @@
-name: 'Install Java and Ivy on Ubuntu'
-description: 'Installs Java and Apache Ivy for Any on Ubuntu (latest)'
+name: 'Install Java 11 and Ivy on Ubuntu'
+description: 'Installs Java 11 and Apache Ivy for Any on Ubuntu (latest)'
 
 inputs:
-  java_version:
-    description: 'which version of the JDK to install'
-    required: true
   ivy_version:
     description: 'which version of the ivy to install'
     required: true
@@ -20,9 +17,15 @@ runs:
         java-version: '11'
         distribution: 'temurin'
     - run: |
-        wget https://dlcdn.apache.org//ant/ivy/$IVY_VERSION/apache-ivy-$IVY_VERSION-bin.tar.gz
+        Invoke-WebRequest https://dlcdn.apache.org//ant/ivy/$IVY_VERSION/apache-ivy-$IVY_VERSION-bin.tar.gz -OutFile apache-ivy-$IVY_VERSION-bin.tar.gz
+        certutil.exe -hashfile apache-ivy-2.5.3-bin.tar.gz SHA512 | Out-File -FilePath download.sha512
         echo $IVY_SHA512 apache-ivy-$IVY_VERSION-bin.tar.gz > download.sha512sum
-        sha512sum -c download.sha512sum
-        tar xzf apache-ivy-$IVY_VERSION-bin.tar.gz
-        cp apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar `ant get_ant_home | grep echo | sed 's/^.*\[echo\] \(.*\)/\1/'`/lib
-      shell: bash
+        if ((Get-Content -Path download.sha512)[1] -eq $IVY_SHA512) {
+          tar.exe xzf apache-ivy-$IVY_VERSION-bin.tar.gz
+          $ant_home = (ant.bat get_ant_home | findstr.exe echo).split(' ', 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
+          Copy-Item -Path "apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar" -Destination "$ant_home"
+          cp  `ant.bat get_ant_home | grep echo | sed 's/^.*\[echo\] \(.*\)/\1/'`/lib
+        } else {
+          exit 1
+        }
+      shell: powershell
