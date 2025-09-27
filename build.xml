@@ -2,16 +2,16 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="jConfigFile" default="clean jar" basedir=".">
     <description>ANT build script for project jConfigFile</description>
 
-    <property name="src" location="src"/>
-    <property name="test" location="test"/>
-    <property name="build" location="build"/>
-    <property name="dist" location="dist"/>
-    <property name="test_results" location="test_results"/>
+    <property name="SRC" location="src"/>
+    <property name="TEST" location="test"/>
+    <property name="BUILD" location="build"/>
+    <property name="DIST" location="dist"/>
+    <property name="TEST_RESULTS" location="test_results"/>
 
     <target name="clean">
-        <delete dir="${build}"/>
-        <delete dir="${dist}"/>
-        <delete dir="${test_results}"/>
+        <delete dir="${BUILD}"/>
+        <delete dir="${DIST}"/>
+        <delete dir="${TEST_RESULTS}"/>
         <ivy:cleancache/>
     </target>
 
@@ -22,10 +22,10 @@
     </target>
 
     <target name="compile">
-        <mkdir dir="${build}"/>
-        <javac includeantruntime="false" srcdir="${src}" destdir="${build}"/>
-        <copy todir="${build}">
-            <fileset dir="${src}">
+        <mkdir dir="${BUILD}"/>
+        <javac includeantruntime="false" srcdir="${SRC}" destdir="${BUILD}"/>
+        <copy todir="${BUILD}">
+            <fileset dir="${SRC}">
                 <exclude name="**/*.java"/>
                 <exclude name="**/*.form"/>
             </fileset>
@@ -33,14 +33,14 @@
     </target>
 
     <target name="compile_test" depends="compile,fetch_maven">
-        <mkdir dir="${build}"/>
-        <javac includeantruntime="false" srcdir="${test}" destdir="${build}">
+        <mkdir dir="${BUILD}"/>
+        <javac includeantruntime="false" srcdir="${TEST}" destdir="${BUILD}">
             <classpath>
                 <path refid="maven_deps"/>
             </classpath>
         </javac>
-        <copy todir="${build}">
-            <fileset dir="${test}">
+        <copy todir="${BUILD}">
+            <fileset dir="${TEST}">
                 <exclude name="**/*.java"/>
                 <exclude name="**/*.form"/>
             </fileset>
@@ -48,27 +48,27 @@
     </target>
 
     <target name="jar" depends="compile">
-        <mkdir dir="${dist}"/>
-        <jar jarfile="${dist}/jConfigFile.jar" basedir="${build}"/>
+        <mkdir dir="${DIST}"/>
+        <jar jarfile="${DIST}/jConfigFile.jar" basedir="${BUILD}"/>
     </target>
 
     <target name="unit_test" depends="compile_test">
-        <mkdir dir="${test_results}"/>
+        <mkdir dir="${TEST_RESULTS}"/>
         <junitlauncher printSummary="true">
             <classpath>
                 <fileset dir="D:/Files/Downloads/junit/"/>
-                <pathelement location="${build}"/>
+                <pathelement location="${BUILD}"/>
             </classpath>
             <testclasses failureProperty="unit_test_failed">
-                <fileset dir="${build}"/>
-                <listener type="legacy-plain" sendSysOut="true" outputDir="${test_results}"/>
+                <fileset dir="${BUILD}"/>
+                <listener type="legacy-plain" sendSysOut="true" outputDir="${TEST_RESULTS}"/>
             </testclasses>
         </junitlauncher>
         <fail message="Unit tests failed." if="unit_test_failed"/>
     </target>
 
     <target name="integration_test" depends="compile_test">
-        <java classpath="${build}" fork="yes" classname="com.randallscharpf.java.jconfigfile.IntegrationTestMain"/>
+        <java classpath="${BUILD}" fork="yes" classname="com.randallscharpf.java.jconfigfile.IntegrationTestMain"/>
     </target>
 
     <target name="test" depends="unit_test, integration_test">

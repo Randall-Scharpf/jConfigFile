@@ -1,5 +1,10 @@
 on: [push]
 
+env:
+  JAVA_VERSION: 21
+  IVY_VERSION: 2.5.3
+  IVY_SHA512: 19e38998eda66a635643f50eec1fe62aeaa4b66e7b12540e38ae9ab67f2402a4df1230c0fa142e391234abf8491b5cd46fa8a3b004324b511a495701be848470
+
 jobs:
   build_jar:
     runs-on: ubuntu-latest
@@ -7,10 +12,11 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: 'recurisve'
-      - uses: actions/setup-java@v4
+      - uses: .github/actions/install-java-with-ivy-ubuntu
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          JAVA_VERSION: $JAVA_VERSION
+          IVY_VERSION: $IVY_VERSION
+          IVY_SHA512: $IVY_SHA512
       - run: |
           ant clean jar
       - uses: actions/upload-artifact@v4
@@ -23,10 +29,11 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: 'recurisve'
-      - uses: actions/setup-java@v4
+      - uses: .github/actions/install-java-with-ivy-ubuntu
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          JAVA_VERSION: $JAVA_VERSION
+          IVY_VERSION: $IVY_VERSION
+          IVY_SHA512: $IVY_SHA512
       - run: |
           ant clean test
       - uses: actions/upload-artifact@v4
@@ -41,7 +48,7 @@ jobs:
           submodules: 'recurisve'
       - uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '$JAVA_VERSION'
           distribution: 'temurin'
       - run: |
           ant clean test
