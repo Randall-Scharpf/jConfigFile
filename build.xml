@@ -60,7 +60,7 @@
         <mkdir dir="${TEST_RESULTS}"/>
         <junitlauncher printSummary="true">
             <classpath>
-                <fileset dir="D:/Files/Downloads/junit/"/>
+                <path refid="maven_deps"/>
                 <pathelement location="${BUILD}"/>
             </classpath>
             <testclasses failureProperty="unit_test_failed">
