@@ -17,7 +17,7 @@ runs:
   steps:
     - uses: actions/setup-java@v4
       with:
-        java-version: '$INPUT_JAVA_VERSION'
+        java-version: $INPUT_JAVA_VERSION
         distribution: 'temurin'
     - run: |
         wget https://dlcdn.apache.org//ant/ivy/$INPUT_IVY_VERSION/apache-ivy-$INPUT_IVY_VERSION-bin.tar.gz

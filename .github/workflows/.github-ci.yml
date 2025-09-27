@@ -1,9 +1,9 @@
 on: [push]
 
 env:
-  JAVA_VERSION: 21
-  IVY_VERSION: 2.5.3
-  IVY_SHA512: 19e38998eda66a635643f50eec1fe62aeaa4b66e7b12540e38ae9ab67f2402a4df1230c0fa142e391234abf8491b5cd46fa8a3b004324b511a495701be848470
+  JAVA_VERSION: '21'
+  IVY_VERSION: '2.5.3'
+  IVY_SHA512: '19e38998eda66a635643f50eec1fe62aeaa4b66e7b12540e38ae9ab67f2402a4df1230c0fa142e391234abf8491b5cd46fa8a3b004324b511a495701be848470'
 
 jobs:
   build_jar:
@@ -48,7 +48,7 @@ jobs:
           submodules: 'recurisve'
       - uses: actions/setup-java@v4
         with:
-          java-version: '$JAVA_VERSION'
+          java-version: $JAVA_VERSION
           distribution: 'temurin'
       - run: |
           ant clean test
