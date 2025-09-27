@@ -36,20 +36,20 @@ public class ConfigMapTest {
     @Test
     public void testSetGet() {
         // test default values
-        assertEquals(uut.getKeyOrDefault("key 1", "fallback 1"), "fallback 1");
-        assertEquals(uut.getKeyOrDefault("key 1", "fallback 2"), "fallback 2");
-        assertEquals(uut.getKeyOrDefault("key 2", "fallback 3"), "fallback 3");
-        assertEquals(uut.getKeyOrDefault("key 2", "fallback 4"), "fallback 4");
+        assertEquals("fallback 1", uut.getKeyOrDefault("key 1", "fallback 1"));
+        assertEquals("fallback 2", uut.getKeyOrDefault("key 1", "fallback 2"));
+        assertEquals("fallback 3", uut.getKeyOrDefault("key 2", "fallback 3"));
+        assertEquals("fallback 4", uut.getKeyOrDefault("key 2", "fallback 4"));
         // test adding values
         uut.setKey("key 1", "value 1");
         uut.setKey("key 2", "value 2");
         uut.setKey("key 3", "value 3");
         uut.setKey("key 4", "value 4");
         // test getting non-default values
-        assertEquals(uut.getKeyOrDefault("key 1", "fallback 1"), "value 1");
-        assertEquals(uut.getKeyOrDefault("key 2", "fallback 2"), "value 2");
-        assertEquals(uut.getKeyOrDefault("key 3", "fallback 3"), "value 3");
-        assertEquals(uut.getKeyOrDefault("key 4", "fallback 4"), "value 4");
+        assertEquals("value 1", uut.getKeyOrDefault("key 1", "fallback 1"));
+        assertEquals("value 2", uut.getKeyOrDefault("key 2", "fallback 2"));
+        assertEquals("value 3", uut.getKeyOrDefault("key 3", "fallback 3"));
+        assertEquals("value 4", uut.getKeyOrDefault("key 4", "fallback 4"));
     }
     
     @Test
@@ -61,47 +61,47 @@ public class ConfigMapTest {
             evilValue = c + evilValue;
         }
         uut.setKey(evilKey, evilValue);
-        assertEquals(uut.getKeyOrDefault(evilKey, "null"), evilValue);
+        assertEquals(evilValue, uut.getKeyOrDefault(evilKey, "null"));
     }
     
     @Test
     public void testRemove() {
         uut.removeKey("doesn't exist");
-        assertEquals(uut.getKeys().size(), 0);
+        assertEquals(0, uut.getKeys().size());
         uut.setKey("key 1", "value 1");
         uut.removeKey("also doesn't exist");
-        assertEquals(uut.getKeys().size(), 1);
+        assertEquals(1, uut.getKeys().size());
         uut.setKey("key 2", "value 1");
         uut.removeKey("key 2");
-        assertEquals(uut.getKeys().size(), 1);
+        assertEquals(1, uut.getKeys().size());
         uut.setKey("key 3", "value 1");
         uut.setKey("key 4", "value 1");
         uut.removeKey("key 1");
-        assertEquals(uut.getKeys().size(), 2);
+        assertEquals(2, uut.getKeys().size());
     }
     
     @Test
     public void testKeySet() {
         Set<String> expected_result = new HashSet<>();
         // check empty key set
-        assertEquals(uut.getKeys(), expected_result);
+        assertEquals(expected_result, uut.getKeys());
         // add key
         uut.setKey("apple", "10");
         expected_result.add("apple");
-        assertEquals(uut.getKeys(), expected_result);
+        assertEquals(expected_result, uut.getKeys());
         // add new key
         uut.setKey("banana", "20");
         expected_result.add("banana");
-        assertEquals(uut.getKeys(), expected_result);
+        assertEquals(expected_result, uut.getKeys());
         // overwrite old key
         uut.setKey("apple", "30");
-        assertEquals(uut.getKeys(), expected_result);
+        assertEquals(expected_result, uut.getKeys());
         // add a few more keys
         uut.setKey("carrot", "40");
         uut.setKey("banana", "50");
         uut.setKey("date", "60");
         expected_result.add("carrot");
         expected_result.add("date");
-        assertEquals(uut.getKeys(), expected_result);
+        assertEquals(expected_result, uut.getKeys());
     }
 }

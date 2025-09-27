@@ -42,27 +42,27 @@ public class ConfigFileTest {
             uut.removeKey("key 3");
             uut.removeKey("key 4");
             // test default values
-            assertEquals(uut.getKeyOrDefault("key 1", "fallback 1"), "fallback 1");
-            assertEquals(uut.getKeyOrDefault("key 1", "fallback 2"), "fallback 2");
-            assertEquals(uut.getKeyOrDefault("key 2", "fallback 3"), "fallback 3");
-            assertEquals(uut.getKeyOrDefault("key 2", "fallback 4"), "fallback 4");
+            assertEquals("fallback 1", uut.getKeyOrDefault("key 1", "fallback 1"));
+            assertEquals("fallback 2", uut.getKeyOrDefault("key 1", "fallback 2"));
+            assertEquals("fallback 3", uut.getKeyOrDefault("key 2", "fallback 3"));
+            assertEquals("fallback 4", uut.getKeyOrDefault("key 2", "fallback 4"));
             // test adding values
             uut.setKey("key 1", "value 1");
             uut.setKey("key 2", "value 2");
             uut.setKey("key 3", "value 3");
             uut.setKey("key 4", "value 4");
             // test getting non-default values
-            assertEquals(uut.getKeyOrDefault("key 1", "fallback 1"), "value 1");
-            assertEquals(uut.getKeyOrDefault("key 2", "fallback 2"), "value 2");
-            assertEquals(uut.getKeyOrDefault("key 3", "fallback 3"), "value 3");
-            assertEquals(uut.getKeyOrDefault("key 4", "fallback 4"), "value 4");
+            assertEquals("value 1", uut.getKeyOrDefault("key 1", "fallback 1"));
+            assertEquals("value 2", uut.getKeyOrDefault("key 2", "fallback 2"));
+            assertEquals("value 3", uut.getKeyOrDefault("key 3", "fallback 3"));
+            assertEquals("value 4", uut.getKeyOrDefault("key 4", "fallback 4"));
             // ensure persistence
             uut.close();
             uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testSetGet").searchForConfig());
-            assertEquals(uut.getKeyOrDefault("key 1", "fallback 1"), "value 1");
-            assertEquals(uut.getKeyOrDefault("key 2", "fallback 2"), "value 2");
-            assertEquals(uut.getKeyOrDefault("key 3", "fallback 3"), "value 3");
-            assertEquals(uut.getKeyOrDefault("key 4", "fallback 4"), "value 4");
+            assertEquals("value 1", uut.getKeyOrDefault("key 1", "fallback 1"));
+            assertEquals("value 2", uut.getKeyOrDefault("key 2", "fallback 2"));
+            assertEquals("value 3", uut.getKeyOrDefault("key 3", "fallback 3"));
+            assertEquals("value 4", uut.getKeyOrDefault("key 4", "fallback 4"));
             uut.close();
         });
     }
@@ -71,17 +71,24 @@ public class ConfigFileTest {
     public void testEvilKeyValue() {
         assertDoesNotThrow(() -> {
             uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testEvilKeyValue").searchForConfig());
+            // make a key and value that contain EVERY special character
             String evilKey = "";
             String evilValue = "";
             for (char c = 0; c < 256; c++) {
                 evilKey = evilKey + c;
                 evilValue = c + evilValue;
             }
+            // ensure we know the pre-test state of the relevant keys in the file
+            uut.removeKey(evilKey);
+            // test adding and removing new mapping across two program executions
             uut.setKey(evilKey, evilValue);
-            assertEquals(uut.getKeyOrDefault(evilKey, "null"), evilValue);
+            assertEquals(evilValue, uut.getKeyOrDefault(evilKey, "null"));
             uut.close();
             uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testEvilKeyValue").searchForConfig());
-            assertEquals(uut.getKeyOrDefault(evilKey, "null"), evilValue);
+            assertEquals(evilValue, uut.getKeyOrDefault(evilKey, "null"));
+            assertEquals(1, uut.getKeys().size());
+            uut.removeKey(evilKey);
+            assertEquals("null", uut.getKeyOrDefault(evilKey, "null"));
             uut.close();
         });
     }
@@ -96,21 +103,26 @@ public class ConfigFileTest {
             uut.removeKey("key 3");
             uut.removeKey("key 4");
             uut.removeKey("doesn't exist");
+            uut.removeKey("also doesn't exist");
+            // try adding and removing different keys
             assertEquals(uut.getKeys().size(), 0);
             uut.setKey("key 1", "value 1");
             uut.removeKey("also doesn't exist");
             assertEquals(uut.getKeys().size(), 1);
+            // ensure removing keys across saves works
             uut.setKey("key 2", "value 1");
             uut.close();
             uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testRemove").searchForConfig());
             uut.removeKey("key 2");
             assertEquals(uut.getKeys().size(), 1);
+            // do it once more to be sure
             uut.setKey("key 3", "value 1");
             uut.setKey("key 4", "value 1");
             uut.removeKey("key 1");
             uut.close();
             uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testRemove").searchForConfig());
             assertEquals(uut.getKeys().size(), 2);
+            // clean up
             uut.removeKey("key 3");
             uut.removeKey("key 4");
             assertEquals(uut.getKeys().size(), 0);
@@ -122,30 +134,41 @@ public class ConfigFileTest {
     public void testKeySet() {
         assertDoesNotThrow(() -> {
             uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testKeySet").searchForConfig());
+            // ensure we know the pre-test state of the relevant keys in the file
+            uut.removeKey("apple");
+            uut.removeKey("banana");
+            uut.removeKey("carrot");
+            uut.removeKey("date");
             Set<String> expected_result = new HashSet<>();
             // check empty key set
-            assertEquals(uut.getKeys(), expected_result);
+            assertEquals(expected_result, uut.getKeys());
             // add key
             uut.setKey("apple", "10");
             expected_result.add("apple");
-            assertEquals(uut.getKeys(), expected_result);
+            assertEquals(expected_result, uut.getKeys());
             // add new key
             uut.setKey("banana", "20");
             expected_result.add("banana");
-            assertEquals(uut.getKeys(), expected_result);
+            assertEquals(expected_result, uut.getKeys());
             // overwrite old key
             uut.setKey("apple", "30");
-            assertEquals(uut.getKeys(), expected_result);
+            assertEquals(expected_result, uut.getKeys());
             // add a few more keys
             uut.setKey("carrot", "40");
             uut.setKey("banana", "50");
             uut.setKey("date", "60");
             expected_result.add("carrot");
             expected_result.add("date");
-            assertEquals(uut.getKeys(), expected_result);
+            assertEquals(expected_result, uut.getKeys());
+            // ensure persistence
             uut.close();
             uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testKeySet").searchForConfig());
-            assertEquals(uut.getKeys(), expected_result);
+            assertEquals(expected_result, uut.getKeys());
+            // clean up
+            uut.removeKey("apple");
+            uut.removeKey("banana");
+            uut.removeKey("carrot");
+            uut.removeKey("date");
             uut.close();
         });
     }
