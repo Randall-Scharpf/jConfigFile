@@ -2,13 +2,13 @@ name: 'Install Java and Ivy on Ubuntu'
 description: 'Installs Java and Apache Ivy for Any on Ubuntu (latest)'
 
 inputs:
-  JAVA_VERSION:
+  java_version:
     description: 'which version of the JDK to install'
     required: true
-  IVY_VERSION:
+  ivy_version:
     description: 'which version of the ivy to install'
     required: true
-  IVY_SHA512:
+  ivy_sha512:
     description: 'sha512 checksum of ivy distribution tar.gz file'
     required: true
 
@@ -17,12 +17,12 @@ runs:
   steps:
     - uses: actions/setup-java@v4
       with:
-        java-version: '$JAVA_VERSION'
+        java-version: '$INPUT_JAVA_VERSION'
         distribution: 'temurin'
     - run: |
-        wget https://dlcdn.apache.org//ant/ivy/$IVY_VERSION/apache-ivy-$IVY_VERSION-bin.tar.gz
-        echo $IVY_SHA512 apache-ivy-$IVY_VERSION-bin.tar.gz > download.sha512sum
+        wget https://dlcdn.apache.org//ant/ivy/$INPUT_IVY_VERSION/apache-ivy-$INPUT_IVY_VERSION-bin.tar.gz
+        echo $INPUT_IVY_SHA512 apache-ivy-$INPUT_IVY_VERSION-bin.tar.gz > download.sha512sum
         sha512sum -c download.sha512sum
-        tar xzf apache-ivy-$IVY_VERSION-bin.tar.gz
-        cp apache-ivy-$IVY_VERSION/ivy-$IVY_VERSION.jar '$ANT_HOME'
+        tar xzf apache-ivy-$INPUT_IVY_VERSION-bin.tar.gz
+        cp apache-ivy-$INPUT_IVY_VERSION/ivy-$INPUT_IVY_VERSION.jar '$ANT_HOME'
       shell: bash
