@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class ConfigMap implements Config {
-    
+
     private final Map<String, String> pairings;
 
     public ConfigMap() {
@@ -25,7 +25,7 @@ public class ConfigMap implements Config {
     @Override
     public String getKeyOrDefault(String key, String fallback) {
         if (!pairings.containsKey(key)) {
-            pairings.put(key, fallback);
+            return fallback;
         }
         return pairings.get(key);
     }
@@ -33,6 +33,11 @@ public class ConfigMap implements Config {
     @Override
     public Set<String> getKeys() {
         return pairings.keySet();
+    }
+    
+    @Override
+    public void removeKey(String key) {
+        pairings.remove(key);
     }
 
     @Override
@@ -44,5 +49,5 @@ public class ConfigMap implements Config {
     public void close() throws IOException {
         // do nothing, this uses no external resources
     }
-    
+
 }

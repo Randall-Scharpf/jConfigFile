@@ -12,5 +12,6 @@ public interface Config extends Closeable {
     public void setKey(String key, String value);
     public String getKeyOrDefault(String key, String fallback);
     public Set<String> getKeys();
+    public void removeKey(String key);
     public void save() throws IOException;
 }

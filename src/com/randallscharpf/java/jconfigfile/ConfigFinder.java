@@ -11,8 +11,8 @@ import javax.swing.filechooser.FileSystemView;
 public class ConfigFinder {
     private final String appName;
     private final File app;
-    
-    public ConfigFinder(Class constructee, String appName) {
+
+    public ConfigFinder(Class<?> constructee, String appName) {
         this.appName = appName;
         File f;
         try {
@@ -22,7 +22,7 @@ public class ConfigFinder {
         }
         app = f;
     }
-    
+
     public File searchForConfig() {
         for (ConfigLocation l : ConfigLocation.values()) {
             if (configAt(l).exists()) {
@@ -31,7 +31,7 @@ public class ConfigFinder {
         }
         return configAt(ConfigLocation.APPDATA);
     }
-    
+
     public File configAt(ConfigLocation loc) {
         File appdir;
         switch (loc) {
