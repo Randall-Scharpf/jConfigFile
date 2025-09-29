@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 
-public class ConfigInitializer {
+public class InteractiveConfigInitializer {
     
     public static Config findOrCreateConfig(Class<?> callee, String configName) throws IOException {
         ConfigFinder finder = new ConfigFinder(callee, configName);
@@ -41,7 +41,11 @@ public class ConfigInitializer {
     
     public static Config findOrCreateConfigWithFallback(Class<?> callee, String configName) {
         try {
-            return findOrCreateConfig(callee, configName);
+            Config cfg = findOrCreateConfig(callee, configName);
+            if (cfg == null) {
+                return new ConfigMap();
+            }
+            return cfg;
         } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                        "Failed to open config file with message: " + ex.getMessage() +
@@ -53,9 +57,9 @@ public class ConfigInitializer {
     
     public static void findOrCreateConfigAsyncWithFallback(Class<?> callee, String configName, Consumer<Config> callback) {
         findOrCreateConfigAsync(callee, configName, (res, err) -> {
-            if (err != null) {
+            if (res == null) {
                 JOptionPane.showMessageDialog(null,
-                        "Failed to open config file with message: " + err.getMessage() +
+                        "Failed to open config file with message: " + (err == null ? "user cancelled" : err.getMessage()) +
                         "\nConfiguration changes will not be persistent.",
                         "Error", JOptionPane.ERROR_MESSAGE);
                 callback.accept(new ConfigMap());

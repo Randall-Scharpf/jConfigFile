@@ -8,13 +8,13 @@ import java.io.IOException;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import com.randallscharpf.java.jconfigfile.Config;
-import com.randallscharpf.java.jconfigfile.ConfigInitializer;
+import com.randallscharpf.java.jconfigfile.InteractiveConfigInitializer;
 
 public class TestGui extends javax.swing.JFrame {
 
     public TestGui() {
         initComponents();
-        conf = ConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jconfigfilesandbox");
+        conf = InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jconfigfilesandbox");
     }
 
     @SuppressWarnings("unchecked")

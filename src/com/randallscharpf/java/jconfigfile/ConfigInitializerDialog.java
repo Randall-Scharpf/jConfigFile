@@ -173,7 +173,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         setVisible(true);
         try {
             synchronized (syncKey) {
-                while (result == null) {
+                while ((result == null) && (error == null)) {
                     syncKey.wait();
                 }
             }
@@ -261,7 +261,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
                 comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()))
         ).getAbsolutePath());
     }//GEN-LAST:event_locationComboBoxItemStateChanged
-
+    
     private enum State {
         WAITING,
         CHOOSING_LOCATION,
@@ -285,4 +285,51 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> locationComboBox;
     private javax.swing.JTextField pathTextField;
     // End of variables declaration//GEN-END:variables
+
+    // API to operate the GUI from another Java class
+
+    public void clickCreateNewButton() {
+        createBlankButtonActionPerformed(null);
+    }
+    
+    public void clickCreateCopyButton() {
+        createCopyButtonActionPerformed(null);
+    }
+    
+    public void setDropdownSelection(ConfigLocation location) {
+        boolean succeeded = false;
+        while (!succeeded) {
+            try {
+                for (Map.Entry<String, ConfigLocation> entry : comboBoxLocations.entrySet()) {
+                    if (entry.getValue() == location) {
+                        locationComboBox.setSelectedItem(entry.getKey());
+                    }
+                }
+                succeeded = true;
+            } catch (NullPointerException ex1) {
+                // API call came in so fast that the GUI wasn't ready yet
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ex2) {
+                    throw new RuntimeException(ex2);
+                }
+            }
+        }
+    }
+
+    public String getPreviewPath() {
+        while (true) {
+            try {
+                return pathTextField.getText();
+            } catch (NullPointerException ex1) {
+                // API call came in so fast that the GUI wasn't ready yet
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ex2) {
+                    throw new RuntimeException(ex2);
+                }
+            }
+        }
+    }
+
 }

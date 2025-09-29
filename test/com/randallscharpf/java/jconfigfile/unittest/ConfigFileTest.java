@@ -10,10 +10,18 @@ import com.randallscharpf.java.jconfigfile.ConfigFinder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.io.File;
+import java.io.FileWriter;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.file.StandardOpenOption;
 
+@Timeout(value = 20, unit = TimeUnit.SECONDS)
 public class ConfigFileTest {
     
     ConfigFile uut;
@@ -92,7 +100,7 @@ public class ConfigFileTest {
             uut.close();
         });
     }
-    
+
     @Test
     public void testRemove() {
         assertDoesNotThrow(() -> {
@@ -176,18 +184,76 @@ public class ConfigFileTest {
     @Test
     public void testEncodeDecode() {
         assertDoesNotThrow(() -> {
-            uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testEncodeDecode").searchForConfig());
-            assertEquals("3132333435", uut.encode("12345"));
-            assertEquals("616263", uut.encode("abc"));
-            assertEquals("4142434445464748494a", uut.encode("ABCDEFGHIJ"));
-            assertEquals("", uut.encode(""));
-            assertEquals("000a5c203d", uut.encode("\0\n\\ ="));
-            assertEquals("12345", uut.decode("3132333435"));
-            assertEquals("abc", uut.decode("616263"));
-            assertEquals("ABCDEFGHIJ", uut.decode("4142434445464748494a"));
-            assertEquals("", uut.decode(""));
-            assertEquals("\0\n\\ =", uut.decode("000a5c203d"));
-            uut.close();
+            assertEquals("3132333435", ConfigFile.encode("12345"));
+            assertEquals("616263", ConfigFile.encode("abc"));
+            assertEquals("4142434445464748494a", ConfigFile.encode("ABCDEFGHIJ"));
+            assertEquals("", ConfigFile.encode(""));
+            assertEquals("000a5c203d", ConfigFile.encode("\0\n\\ ="));
+            assertEquals("12345", ConfigFile.decode("3132333435"));
+            assertEquals("abc", ConfigFile.decode("616263"));
+            assertEquals("ABCDEFGHIJ", ConfigFile.decode("4142434445464748494a"));
+            assertEquals("", ConfigFile.decode(""));
+            assertEquals("\0\n\\ =", ConfigFile.decode("000a5c203d"));
         });
     }
+    
+    
+    @Test
+    public void testCorruptedFile() {
+        assertDoesNotThrow(() -> {
+            // write a badly-formed config file
+            String evilKey = "";
+            String evilValue = "";
+            for (char c = 0; c < 256; c++) {
+                evilKey = evilKey + c;
+                evilValue = c + evilValue;
+            }
+            File configLocation = new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testCorruptedFile").searchForConfig();
+            configLocation.getParentFile().mkdirs();
+            FileWriter testWriter = new FileWriter(configLocation);
+            testWriter.write(ConfigFile.encode("abc")+"="+ConfigFile.encode("123")+"\n");
+            testWriter.write(ConfigFile.encode("abc")+"="+ConfigFile.encode("234")+"\n");
+            testWriter.write(ConfigFile.encode("abc")+"="+ConfigFile.encode("345")+"\n");
+            testWriter.write("="+ConfigFile.encode("abc")+"="+ConfigFile.encode("123")+"\n");
+            testWriter.write("="+evilValue+"="+evilKey+"\n");
+            testWriter.write("="+evilValue+"="+evilKey+"\n");
+            testWriter.write("not_encoded=not_encoded_value\n");
+            testWriter.write("0o0_0n0o0e0=1o1_1n1o1e1_1a1u1\n");
+            testWriter.write(evilValue+evilKey+"\n");
+            testWriter.write(evilValue+"="+evilKey+"\n");
+            testWriter.write("="+evilValue+evilKey+"\n");
+            testWriter.write("="+evilValue+"="+evilKey+"\n");
+            testWriter.close();
+            // test parsing in the config and using it a little
+            uut = new ConfigFile(configLocation);
+            // test adding and removing new mapping across two program executions
+            assertEquals("empty", uut.getKeyOrDefault("test_key", "empty"));
+            uut.setKey("test_key", "hello world!");
+            assertEquals("hello world!", uut.getKeyOrDefault("test_key", "empty"));
+            uut.close();
+            uut = new ConfigFile(configLocation);
+            assertEquals("hello world!", uut.getKeyOrDefault("test_key", "empty"));
+            uut.removeKey("test_key");
+            assertEquals("empty", uut.getKeyOrDefault("test_key", "empty"));
+            uut.close();
+            // cleanup garbage file
+            configLocation.delete();
+        });
+    }
+    
+    @Test
+    public void testFileContention() {
+        assertDoesNotThrow(() -> {
+            File configLocation = new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testFileContention").searchForConfig();
+            configLocation.getParentFile().mkdirs();
+            configLocation.createNewFile();
+            FileLock lock = FileChannel.open(configLocation.toPath(), StandardOpenOption.WRITE).tryLock();
+            assertNotNull(lock);
+            assertThrows(java.nio.channels.OverlappingFileLockException.class, () -> {
+                uut = new ConfigFile(configLocation);
+            });
+            lock.release();
+        });
+    }
+
 }

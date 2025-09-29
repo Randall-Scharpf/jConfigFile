@@ -4,6 +4,7 @@
  */
 package com.randallscharpf.java.jconfigfile;
 
+import java.awt.event.ActionEvent;
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
 import java.util.function.Consumer;
@@ -127,4 +128,31 @@ public class FileSelectFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JFileChooser jFileChooser1;
     // End of variables declaration//GEN-END:variables
+
+    // API to operate the GUI from another Java class
+
+    public void setSelectedFile(File f) {
+        boolean succeeded = false;
+        while (!succeeded) {
+            try {
+                jFileChooser1.setSelectedFile(f);
+                succeeded = true;
+            } catch (NullPointerException ex1) {
+                // API call came in so fast that the GUI wasn't ready yet
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ex2) {
+                    throw new RuntimeException(ex2);
+                }
+            }
+        }
+    }
+    
+    public void cancelSelection() {
+        jFileChooser1ActionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "CancelSelection"));
+    }
+    
+    public void approveSelection() {
+        jFileChooser1ActionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "ApproveSelection"));
+    }
 }

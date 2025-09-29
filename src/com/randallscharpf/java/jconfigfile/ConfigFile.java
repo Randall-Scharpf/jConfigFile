@@ -39,9 +39,13 @@ public class ConfigFile implements Config {
         // ignore comments (which start with ; in .ini), blank lines, and invalid lines
         file.seek(0);
         while ((line = file.readLine()) != null) {
-            String[] tokens = line.split("=", 2);
+            String[] tokens = line.split("=");
             if (line.length() > 0 && line.charAt(0) != ';' && tokens.length == 2) {
-                pairings.put(decode(tokens[0]), decode(tokens[1]));
+                try {
+                    pairings.put(decode(tokens[0]), decode(tokens[1]));
+                } catch(NumberFormatException ex) {
+                    // invalid line: skip parsing
+                }
             }
         }
     }
@@ -110,7 +114,7 @@ public class ConfigFile implements Config {
         }
     }
     
-    public final String encode(String humanReadable) {
+    public static String encode(String humanReadable) {
         String hex = "";
         for (int i = 0; i < humanReadable.length(); i++) {
             hex += String.format("%02x", (int) humanReadable.charAt(i));
@@ -118,7 +122,7 @@ public class ConfigFile implements Config {
         return hex;
     }
     
-    public final String decode(String hex) {
+    public static String decode(String hex) {
         String humanReadable = "";
         for (int i = 0; i + 1 < hex.length(); i += 2) {
             humanReadable += (char) Integer.parseInt(hex.substring(i, i + 2), 16);
