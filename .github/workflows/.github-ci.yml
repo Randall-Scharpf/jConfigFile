@@ -33,7 +33,7 @@ jobs:
           ivy_version: $IVY_VERSION
           ivy_sha512: $IVY_SHA512
       - run: |
-          ant clean integration_test
+          ant clean test
       - uses: actions/upload-artifact@v4
         with:
           name: linux_test_results
