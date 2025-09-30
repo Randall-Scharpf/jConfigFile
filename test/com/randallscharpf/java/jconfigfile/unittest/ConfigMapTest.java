@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-@Timeout(value = 20, unit = TimeUnit.SECONDS)
+@Timeout(value = 10, unit = TimeUnit.SECONDS)
 public class ConfigMapTest {
     
     ConfigMap uut;

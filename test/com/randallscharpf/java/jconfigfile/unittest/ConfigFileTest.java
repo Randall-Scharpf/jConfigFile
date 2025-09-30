@@ -21,7 +21,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.StandardOpenOption;
 
-@Timeout(value = 20, unit = TimeUnit.SECONDS)
+@Timeout(value = 10, unit = TimeUnit.SECONDS)
 public class ConfigFileTest {
     
     ConfigFile uut;

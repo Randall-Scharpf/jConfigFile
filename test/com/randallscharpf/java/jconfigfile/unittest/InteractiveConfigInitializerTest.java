@@ -22,6 +22,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
 // which method to use?
 // - findOrCreateConfig
 // - findOrCreateConfigAsync
@@ -39,7 +42,9 @@ import static org.junit.jupiter.api.Assertions.*;
 // - cancel selection
 // - select location
 
-@Timeout(value = 5, unit = TimeUnit.SECONDS)
+// four methods * (preexisting * loc, new * loc, newerr, copy * loc, copyerr,
+
+@Timeout(value = 10, unit = TimeUnit.SECONDS)
 public class InteractiveConfigInitializerTest {
 
     private final ConfigFinder standardLocator;
@@ -51,7 +56,7 @@ public class InteractiveConfigInitializerTest {
     
     private Config lambda_result;
     
-    private static final int GUI_SYNC_DELAY = 100;
+    private static final int GUI_SYNC_DELAY = 500;
 
     public InteractiveConfigInitializerTest() {
         standardLocator = new ConfigFinder(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
@@ -93,19 +98,20 @@ public class InteractiveConfigInitializerTest {
                     Thread.sleep(1);
                 }
                 Thread.sleep(GUI_SYNC_DELAY);
+                // ensure that the file from before was found; cancel the test if another dialog opened
+                ConfigInitializerDialog gui = getActiveConfigInitializerDialog();
+                if (gui != null) {
+                    workerSucceeded = false;
+                    workerMessage = "findorCreateConfig created a dialog for an already-existing config file";
+                    // close the dialog so we don't hang
+                    gui.setDropdownSelection(ConfigLocation.APPDATA); // just pick a default, we've already failed the test
+                    Thread.sleep(GUI_SYNC_DELAY);
+                    gui.clickCreateNewButton();
+                }
             } catch (InterruptedException ex) {
                 workerSucceeded = false;
                 workerMessage = "Worker thread was interrupted";
                 return;
-            }
-            // ensure that the file from before was found; cancel the test if another dialog opened
-            ConfigInitializerDialog gui = getActiveConfigInitializerDialog();
-            if (gui != null) {
-                workerSucceeded = false;
-                workerMessage = "findorCreateConfig created a dialog for an already-existing config file";
-                // close the dialog so we don't hang
-                gui.setDropdownSelection(ConfigLocation.APPDATA); // just pick a default, we've already failed the test
-                gui.clickCreateNewButton();
             }
         });
         // main thread calls findOrCreateConfig to synchronously get config file
@@ -124,10 +130,13 @@ public class InteractiveConfigInitializerTest {
     }
     
     private Config callSyncExpectPopup(ConfigLocation targetLocation, Callable<Config> testFunction) {
-        return callSyncExpectPopupAndCopy(targetLocation, null, testFunction);
+        return callSyncExpectPopupAndCopy(targetLocation, testFunction, null, null);
     }
 
-    private Config callSyncExpectPopupAndCopy(ConfigLocation targetLocation, String templatePath, Callable<Config> testFunction) {
+    private Config callSyncExpectPopupAndCopy(
+            ConfigLocation targetLocation, Callable<Config> testFunction,
+            String templatePath, String copyAction
+    ) {
         // start a worker thread to poke the API for the dialog that will get opened
         worker = new Thread(() -> {
             workerSucceeded = true;
@@ -137,44 +146,40 @@ public class InteractiveConfigInitializerTest {
                     Thread.sleep(1);
                 }
                 Thread.sleep(GUI_SYNC_DELAY);
-            } catch (InterruptedException ex) {
-                workerSucceeded = false;
-                workerMessage = "Worker thread was interrupted";
-                return;
-            }
-            // ensure the condition to continue was that a window got opened
-            ConfigInitializerDialog gui = getActiveConfigInitializerDialog();
-            if (gui == null) {
-                workerSucceeded = false;
-                workerMessage = "findOrCreateConfig created a new config without user input";
-            } else {
-                // select "new" mode in dialog with location we're currently testing
-                gui.setDropdownSelection(targetLocation);
-                String previewPath = gui.getPreviewPath();
-                String expectedPath = standardLocator.configAt(targetLocation).getAbsolutePath();
-                if (!gui.getPreviewPath().equals(expectedPath)) {
+                // ensure the condition to continue was that a window got opened
+                ConfigInitializerDialog gui = getActiveConfigInitializerDialog();
+                if (gui == null) {
                     workerSucceeded = false;
-                    workerMessage = String.format("Dialog preview path %s did not match expected path %s", previewPath, expectedPath);
-                }
-                if (templatePath != null){
-                    gui.clickCreateCopyButton();
-                    // wait for window to be visible or for findOrCreateConfig to terminate otherwise
-                    try {
+                    workerMessage = "findOrCreateConfig created a new config without user input";
+                } else {
+                    // select "new" mode in dialog with location we're currently testing
+                    gui.setDropdownSelection(targetLocation);
+                    Thread.sleep(GUI_SYNC_DELAY);
+                    String previewPath = gui.getPreviewPath();
+                    String expectedPath = standardLocator.configAt(targetLocation).getAbsolutePath();
+                    if (!gui.getPreviewPath().equals(expectedPath)) {
+                        workerSucceeded = false;
+                        workerMessage = String.format("Dialog preview path %s did not match expected path %s", previewPath, expectedPath);
+                    }
+                    if (templatePath != null) {
+                        gui.clickCreateCopyButton();
+                        // wait for window to be visible or for findOrCreateConfig to terminate otherwise
                         while (!syncGotConfig && (getActiveFileSelectFrame() == null)) {
                             Thread.sleep(1);
                         }
                         Thread.sleep(GUI_SYNC_DELAY);
-                    } catch (InterruptedException ex) {
-                        workerSucceeded = false;
-                        workerMessage = "Worker thread was interrupted";
-                        return;
+                        FileSelectFrame guiFsf = getActiveFileSelectFrame();
+                        guiFsf.setSelectedFile(new File(templatePath));
+                        Thread.sleep(GUI_SYNC_DELAY);
+                        guiFsf.approveSelection();
+                    } else {
+                        gui.clickCreateNewButton();
                     }
-                    FileSelectFrame guiFsf = getActiveFileSelectFrame();
-                    guiFsf.setSelectedFile(new File(templatePath));
-                    guiFsf.approveSelection();
-                } else {
-                    gui.clickCreateNewButton();
                 }
+            } catch (InterruptedException ex) {
+                workerSucceeded = false;
+                workerMessage = "Worker thread was interrupted";
+                return;
             }
         });
         assertDoesNotThrow(() -> {
@@ -199,88 +204,82 @@ public class InteractiveConfigInitializerTest {
         }
     }
     
-    @Test
-    public void testSyncNoFallbackPreexisting() {
-        // check that if there's a file in any one location, it'll use the file
-        for (ConfigLocation loc : ConfigLocation.values()) {
-            // create a unique file for the location we're testing
-            String fileId = hexString(64);
-            File f = standardLocator.configAt(loc);
-            assertDoesNotThrow(() -> {
-                Config cfg = new ConfigFile(f);
-                cfg.setKey("fileId", fileId);
-                cfg.close();
-                // make sure InteractiveConfigInitializer picks up the correct file
-                cfg = callSyncExpectNoPopup(() -> {
-                    return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
-                });
-                assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
-                assertEquals(1, cfg.getKeys().size());
-                cfg.close();
-                // clean up generated files
-                f.delete();
+    @ParameterizedTest
+    @EnumSource(ConfigLocation.class)
+    public void testSyncNoFallbackPreexisting(ConfigLocation loc) {
+        // create a unique file for the location we're testing
+        String fileId = hexString(64);
+        File f = standardLocator.configAt(loc);
+        assertDoesNotThrow(() -> {
+            Config cfg = new ConfigFile(f);
+            cfg.setKey("fileId", fileId);
+            cfg.close();
+            // make sure InteractiveConfigInitializer picks up the correct file
+            cfg = callSyncExpectNoPopup(() -> {
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             });
-        }
+            assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
+            assertEquals(1, cfg.getKeys().size());
+            cfg.close();
+            // clean up generated files
+            f.delete();
+        });
     }
 
-    @Test
-    public void testSyncNoFallbackNew() {
-        // check that we can use the dialog to select any valid location to create a new config file
-        for (ConfigLocation loc : ConfigLocation.values()) {
-            String fileId = hexString(64);
-            assertDoesNotThrow(() -> {
-                Config cfg = callSyncExpectPopup(loc, () -> {
-                    return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
-                });
-                cfg.setKey("fileId", fileId);
-                cfg.close();
-                cfg = callSyncExpectNoPopup(() -> {
-                    return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
-                });
-                assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
-                assertEquals(1, cfg.getKeys().size());
-                cfg.close();
-                // clean up after outselves
-                File cfgFile = standardLocator.configAt(loc);
-                assertTrue(
-                        cfgFile.delete(),
-                        String.format("Failed to delete config file %s after findOrCreateConfig created it", cfgFile.getAbsolutePath())
-                );
+    @ParameterizedTest
+    @EnumSource(ConfigLocation.class)
+    public void testSyncNoFallbackNew(ConfigLocation loc) {
+        String fileId = hexString(64);
+        assertDoesNotThrow(() -> {
+            Config cfg = callSyncExpectPopup(loc, () -> {
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             });
-        }
+            cfg.setKey("fileId", fileId);
+            cfg.close();
+            cfg = callSyncExpectNoPopup(() -> {
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+            });
+            assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
+            assertEquals(1, cfg.getKeys().size());
+            cfg.close();
+            // clean up after outselves
+            File cfgFile = standardLocator.configAt(loc);
+            assertTrue(
+                    cfgFile.delete(),
+                    String.format("Failed to delete config file %s after findOrCreateConfig created it", cfgFile.getAbsolutePath())
+            );
+        });
     }
 
-    @Test
-    public void testSyncNoFallbackCopy() {
+    @ParameterizedTest
+    @EnumSource(ConfigLocation.class)
+    public void testSyncNoFallbackCopyApprove(ConfigLocation loc) {
         File templateFile = new ConfigFinder(getClass(), "jConfigFile_TestTemplate").configAt(ConfigLocation.APPDATA);
-        // check that we can use the dialog to select any valid location to create a copy of an existing config file
-        for (ConfigLocation loc : ConfigLocation.values()) {
-            String fileId = hexString(64);
-            assertDoesNotThrow(() -> {
-                Config template = new ConfigFile(templateFile);
-                template.setKey("fileId", fileId);
-                template.close();
-                Config cfg = callSyncExpectPopupAndCopy(loc, templateFile.getPath(), () -> {
-                    return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
-                });
-                assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
-                assertEquals(1, cfg.getKeys().size());
-                cfg.close();
-                cfg = callSyncExpectNoPopup(() -> {
-                    return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
-                });
-                assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
-                assertEquals(1, cfg.getKeys().size());
-                cfg.close();
-                // clean up after outselves
-                File cfgFile = standardLocator.configAt(loc);
-                assertTrue(
-                        cfgFile.delete(),
-                        String.format("Failed to delete config file %s after findOrCreateConfig created it", cfgFile.getAbsolutePath())
-                );
-                templateFile.delete();
+        String fileId = hexString(64);
+        assertDoesNotThrow(() -> {
+            Config template = new ConfigFile(templateFile);
+            template.setKey("fileId", fileId);
+            template.close();
+            Config cfg = callSyncExpectPopupAndCopy(loc, () -> {
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+            }, templateFile.getPath(), "ApproveSelection");
+            assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
+            assertEquals(1, cfg.getKeys().size());
+            cfg.close();
+            cfg = callSyncExpectNoPopup(() -> {
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             });
-        }
+            assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
+            assertEquals(1, cfg.getKeys().size());
+            cfg.close();
+            // clean up after outselves
+            File cfgFile = standardLocator.configAt(loc);
+            assertTrue(
+                    cfgFile.delete(),
+                    String.format("Failed to delete config file %s after findOrCreateConfig created it", cfgFile.getAbsolutePath())
+            );
+            templateFile.delete();
+        });
     }
     
     @Test

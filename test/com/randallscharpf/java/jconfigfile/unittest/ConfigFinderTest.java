@@ -19,7 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = 20, unit = TimeUnit.SECONDS)
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
+@Timeout(value = 10, unit = TimeUnit.SECONDS)
 public class ConfigFinderTest {
     
     ConfigFinder uut;
@@ -37,58 +40,62 @@ public class ConfigFinderTest {
         // no resources allocated internally to ConfigFinder
     }
 
-    @Test
-    public void testPathConflicts() {
-        for (ConfigLocation loc : ConfigLocation.values()) {
-            File f = uut.configAt(loc);
-            assertFalse(f.exists());
+    @ParameterizedTest
+    @EnumSource(ConfigLocation.class)
+    public void testPathConflicts(ConfigLocation loc) {
+        File f = uut.configAt(loc);
+        assertFalse(f.exists());
+    }
+
+    @ParameterizedTest
+    @EnumSource(ConfigLocation.class)
+    public void testPathsWritable(ConfigLocation loc) {
+        File f = uut.configAt(loc);
+        boolean appDirCreated = false;
+        if (!f.getParentFile().exists()) {
+            assertTrue(f.getParentFile().mkdir());
+            appDirCreated = true;
+        }
+        assertDoesNotThrow(() -> {
+            FileWriter testWriter = new FileWriter(f);
+            testWriter.write("Hello World!\n");
+            testWriter.flush();
+            testWriter.close();
+            f.delete();
+        });
+        if (appDirCreated) {
+            assertTrue(f.getParentFile().delete());
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(ConfigLocation.class)
+    public void testSearching(ConfigLocation loc) {
+        File f = uut.configAt(loc);
+        boolean appDirCreated = false;
+        if (!f.getParentFile().exists()) {
+            assertTrue(f.getParentFile().mkdir());
+            appDirCreated = true;
+        }
+        assertDoesNotThrow(() -> {
+            FileWriter testWriter = new FileWriter(f);
+            testWriter.write("616263=303132\n");
+            testWriter.flush();
+            assertEquals(f, uut.searchForConfig());
+            testWriter.close();
+            f.delete();
+        });
+        if (appDirCreated) {
+            assertTrue(f.getParentFile().delete());
         }
     }
     
     @Test
-    public void testPathsWritable() {
-        for (ConfigLocation loc : ConfigLocation.values()) {
-            File f = uut.configAt(loc);
-            boolean appDirCreated = false;
-            if (!f.getParentFile().exists()) {
-                assertTrue(f.getParentFile().mkdir());
-                appDirCreated = true;
-            }
-            assertDoesNotThrow(() -> {
-                FileWriter testWriter = new FileWriter(f);
-                testWriter.write("Hello World!\n");
-                testWriter.flush();
-                testWriter.close();
-                f.delete();
-            });
-            if (appDirCreated) {
-                assertTrue(f.getParentFile().delete());
-            }
-        }
-    }
-    
-    @Test
-    public void testSearching() {
+    public void testDefault() {
         Set<File> valid_defaults = new HashSet<>();
         for (ConfigLocation loc : ConfigLocation.values()) {
             File f = uut.configAt(loc);
             valid_defaults.add(f);
-            boolean appDirCreated = false;
-            if (!f.getParentFile().exists()) {
-                assertTrue(f.getParentFile().mkdir());
-                appDirCreated = true;
-            }
-            assertDoesNotThrow(() -> {
-                FileWriter testWriter = new FileWriter(f);
-                testWriter.write("616263=303132\n");
-                testWriter.flush();
-                assertEquals(f, uut.searchForConfig());
-                testWriter.close();
-                f.delete();
-            });
-            if (appDirCreated) {
-                assertTrue(f.getParentFile().delete());
-            }
         }
         assertTrue(valid_defaults.contains(uut.searchForConfig()));
     }
