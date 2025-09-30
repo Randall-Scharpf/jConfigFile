@@ -28,10 +28,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: 'recurisve'
-      - run: |
-          sudo apt-get update
-          sudo apt-get install xorg openbox
-          sudo apt-get install xterm
       - uses: ./.github/actions/install-java-with-ivy-ubuntu
         with:
           ivy_version: $IVY_VERSION

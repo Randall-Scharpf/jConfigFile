@@ -42,7 +42,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 // - cancel selection
 // - select location
 
-// four methods * (preexisting * loc, new * loc, newerr, copy * loc, copyerr,
+// four methods * (preexisting * loc, new * loc, newerr, copyerr, dialog-close, copy-close, copy-cancel, copy-select * loc)
+// TODO: dialog-close, copy-close, copy-cancel
 
 @Timeout(value = 10, unit = TimeUnit.SECONDS)
 public class InteractiveConfigInitializerTest {
@@ -111,7 +112,6 @@ public class InteractiveConfigInitializerTest {
             } catch (InterruptedException ex) {
                 workerSucceeded = false;
                 workerMessage = "Worker thread was interrupted";
-                return;
             }
         });
         // main thread calls findOrCreateConfig to synchronously get config file
@@ -128,14 +128,10 @@ public class InteractiveConfigInitializerTest {
             });
         return lambda_result;
     }
-    
-    private Config callSyncExpectPopup(ConfigLocation targetLocation, Callable<Config> testFunction) {
-        return callSyncExpectPopupAndCopy(targetLocation, testFunction, null, null);
-    }
 
-    private Config callSyncExpectPopupAndCopy(
+    private Config callSyncExpectPopup(
             ConfigLocation targetLocation, Callable<Config> testFunction,
-            String templatePath, String copyAction
+            String templatePath, String action
     ) {
         // start a worker thread to poke the API for the dialog that will get opened
         worker = new Thread(() -> {
@@ -171,15 +167,44 @@ public class InteractiveConfigInitializerTest {
                         FileSelectFrame guiFsf = getActiveFileSelectFrame();
                         guiFsf.setSelectedFile(new File(templatePath));
                         Thread.sleep(GUI_SYNC_DELAY);
-                        guiFsf.approveSelection();
+                        switch (action) {
+                            case "ApproveSelection":
+                                guiFsf.approveSelection();
+                                break;
+                            case "CancelSelection":
+                                guiFsf.cancelSelection();
+                                Thread.sleep(GUI_SYNC_DELAY);
+                                gui.setVisible(false);
+                                break;
+                            case "CloseWindow":
+                                guiFsf.setVisible(false);
+                                Thread.sleep(GUI_SYNC_DELAY);
+                                gui.setVisible(false);
+                                break;
+                            default:
+                                fail("Invalid action specified for file select dialog");
+                                break;
+                        }
                     } else {
-                        gui.clickCreateNewButton();
+                        switch (action) {
+                            case "CreateNew":
+                                gui.clickCreateNewButton();
+                                break;
+                            case "CreateCopy":
+                                fail("Provide a templatePath to copy, then specify the action for the copy dialog");
+                                break;
+                            case "CloseWindow":
+                                gui.setVisible(false);
+                                break;
+                            default:
+                                fail("Invalid action specified for config initializer dialog");
+                                break;
+                        }
                     }
                 }
             } catch (InterruptedException ex) {
                 workerSucceeded = false;
                 workerMessage = "Worker thread was interrupted";
-                return;
             }
         });
         assertDoesNotThrow(() -> {
@@ -208,9 +233,9 @@ public class InteractiveConfigInitializerTest {
     @EnumSource(ConfigLocation.class)
     public void testSyncNoFallbackPreexisting(ConfigLocation loc) {
         // create a unique file for the location we're testing
-        String fileId = hexString(64);
-        File f = standardLocator.configAt(loc);
         assertDoesNotThrow(() -> {
+            String fileId = hexString(64);
+            File f = standardLocator.configAt(loc);
             Config cfg = new ConfigFile(f);
             cfg.setKey("fileId", fileId);
             cfg.close();
@@ -229,11 +254,12 @@ public class InteractiveConfigInitializerTest {
     @ParameterizedTest
     @EnumSource(ConfigLocation.class)
     public void testSyncNoFallbackNew(ConfigLocation loc) {
-        String fileId = hexString(64);
+        if (java.awt.GraphicsEnvironment.isHeadless()) return;
         assertDoesNotThrow(() -> {
+            String fileId = hexString(64);
             Config cfg = callSyncExpectPopup(loc, () -> {
                 return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
-            });
+            }, null, "CreateNew");
             cfg.setKey("fileId", fileId);
             cfg.close();
             cfg = callSyncExpectNoPopup(() -> {
@@ -254,13 +280,14 @@ public class InteractiveConfigInitializerTest {
     @ParameterizedTest
     @EnumSource(ConfigLocation.class)
     public void testSyncNoFallbackCopyApprove(ConfigLocation loc) {
-        File templateFile = new ConfigFinder(getClass(), "jConfigFile_TestTemplate").configAt(ConfigLocation.APPDATA);
-        String fileId = hexString(64);
+        if (java.awt.GraphicsEnvironment.isHeadless()) return;
         assertDoesNotThrow(() -> {
+            File templateFile = new ConfigFinder(getClass(), "jConfigFile_TestTemplate").configAt(ConfigLocation.APPDATA);
+            String fileId = hexString(64);
             Config template = new ConfigFile(templateFile);
             template.setKey("fileId", fileId);
             template.close();
-            Config cfg = callSyncExpectPopupAndCopy(loc, () -> {
+            Config cfg = callSyncExpectPopup(loc, () -> {
                 return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             }, templateFile.getPath(), "ApproveSelection");
             assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
@@ -283,8 +310,16 @@ public class InteractiveConfigInitializerTest {
     }
     
     @Test
-    public void testSyncNoFallbackErr() {
+    public void testSyncNoFallbackCopyErr() {
+        if (java.awt.GraphicsEnvironment.isHeadless()) return;
         // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
+        File templateFile = new ConfigFinder(getClass(), "jConfigFile_TestTemplate").configAt(ConfigLocation.APPDATA);
+        String fileId = hexString(64);
+        assertDoesNotThrow(() -> {
+            Config template = new ConfigFile(templateFile);
+            template.setKey("fileId", fileId);
+            template.close();
+        });
         String originalUserHome = System.getProperty("user.home");
         System.setProperty("user.home", "https://error-path");
         Config cfg = callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
@@ -292,9 +327,28 @@ public class InteractiveConfigInitializerTest {
                 InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             });
             return null;
-        });
+        }, templateFile.getPath(), "ApproveSelection");
         assertNull(cfg);
         System.setProperty("user.home", originalUserHome);
+    }
+    
+    @Test
+    public void testSyncNoFallbackErr() {
+        String originalUserHome = System.getProperty("user.home");
+        try {
+            if (java.awt.GraphicsEnvironment.isHeadless()) return;
+            // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
+            System.setProperty("user.home", "https://error-path");
+            Config cfg = callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
+                assertThrows(java.io.IOException.class, () -> {
+                    InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                });
+                return null;
+            }, null, "CreateNew");
+            assertNull(cfg);
+        } finally {
+            System.setProperty("user.home", originalUserHome);
+        }
     }
 
 }

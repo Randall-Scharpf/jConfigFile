@@ -262,20 +262,12 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
                 try {
                     newfile.getParentFile().mkdirs();
                     Files.copy(oldfile.toPath(), newfile.toPath());
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(this,
-                            "Failed to copy old config file with message: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                    state = State.CHOOSING_LOCATION;
-                    setInterfaceEnabled(true);
-                }
-                try {
                     ConfigFile cf_new = new ConfigFile(newfile);
                     closeSelf();
                     callback.accept(cf_new, null);
-                } catch (IOException ex) {
+                } catch (IOException | java.nio.file.InvalidPathException ex) {
                     closeSelf();
-                    callback.accept(null, ex);
+                    callback.accept(null, new IOException(ex));
                 }
             }
         });

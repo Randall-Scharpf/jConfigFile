@@ -72,7 +72,12 @@
     </target>
 
     <target name="integration_test" depends="compile_test">
-        <java classpath="${BUILD}" fork="yes" classname="com.randallscharpf.java.jconfigfile.IntegrationTestMain"/>
+        <java fork="yes" classname="com.randallscharpf.java.jconfigfile.IntegrationTestMain">
+            <classpath>
+                <path refid="maven_deps"/>
+                <pathelement location="${BUILD}"/>
+            </classpath>
+        </java>
     </target>
 
     <target name="test" depends="unit_test, integration_test">
