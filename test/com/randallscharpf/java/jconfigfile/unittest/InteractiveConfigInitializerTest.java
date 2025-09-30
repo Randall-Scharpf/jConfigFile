@@ -22,7 +22,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = 40, unit = TimeUnit.SECONDS)
+// which method to use?
+// - findOrCreateConfig
+// - findOrCreateConfigAsync
+// - findOrCreateConfigWithFallback
+// - findOrCreateConfigAsyncWithFallback
+// what's the preexisting state?
+// - there's a file (in LOCATION, error not possible to manifest)
+// - there's no file: use dialog
+// what can I do with a dialog
+// - new file (in LOCATION or USERPROFILE with error)
+// - close dialog
+// - copy file (in LOCATION or USERPROFILE with error)
+// what can i do with copy dialog
+// - close copy dialog
+// - cancel selection
+// - select location
+
+@Timeout(value = 5, unit = TimeUnit.SECONDS)
 public class InteractiveConfigInitializerTest {
 
     private final ConfigFinder standardLocator;

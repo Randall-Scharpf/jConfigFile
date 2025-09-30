@@ -8,5 +8,6 @@ public class IntegrationTestMain {
     public static void main(String[] args) {
         // TODO: add integration tests
         System.out.println("INTEGRATION TEST");
+        System.out.println("Headless: " + java.awt.GraphicsEnvironment.isHeadless());
     }
 }

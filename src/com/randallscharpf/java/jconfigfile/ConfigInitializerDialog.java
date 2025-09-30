@@ -4,10 +4,13 @@
  */
 package com.randallscharpf.java.jconfigfile;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.swing.JOptionPane;
@@ -16,14 +19,23 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class ConfigInitializerDialog extends javax.swing.JFrame {
     
     private static final Map<String, ConfigLocation> comboBoxLocations;
+    private static final List<String> comboBoxLocationsOrdered;
     
     static {
-        comboBoxLocations = new HashMap<>(5);
-        comboBoxLocations.put("Appdata",        ConfigLocation.APPDATA);
-        comboBoxLocations.put("Documents",      ConfigLocation.DOCUMENTS);
-        comboBoxLocations.put("User Profile",   ConfigLocation.USERPROFILE);
-        comboBoxLocations.put("Adjacent",       ConfigLocation.SIBLING);
-        comboBoxLocations.put("/etc Folder",    ConfigLocation.ETC);
+        comboBoxLocations = new HashMap<>(6);
+        comboBoxLocations.put("Choose Location",    null);
+        comboBoxLocations.put("Appdata",            ConfigLocation.APPDATA);
+        comboBoxLocations.put("Documents",          ConfigLocation.DOCUMENTS);
+        comboBoxLocations.put("User Profile",       ConfigLocation.USERPROFILE);
+        comboBoxLocations.put("Adjacent",           ConfigLocation.SIBLING);
+        comboBoxLocations.put("/etc Folder",        ConfigLocation.ETC);
+        comboBoxLocationsOrdered = new ArrayList<>(6);
+        comboBoxLocationsOrdered.add("Choose Location");
+        comboBoxLocationsOrdered.add("Appdata");
+        comboBoxLocationsOrdered.add("Documents");
+        comboBoxLocationsOrdered.add("User Profile");
+        comboBoxLocationsOrdered.add("Adjacent");
+        comboBoxLocationsOrdered.add("/etc Folder");
     }
 
     public ConfigInitializerDialog(ConfigFinder finder) {
@@ -45,17 +57,22 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         createBlankButton = new javax.swing.JButton();
         createCopyButton = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Choose Config File Location");
         setIconImage(java.awt.Toolkit.getDefaultToolkit().createImage(getClass().getResource("/com/randallscharpf/java/jconfigfile/icon.png")));
         setResizable(false);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jLabel1.setText("No config file was found in any valid location!");
 
         jLabel2.setText("A new config file will be created at the selected location:");
 
-        locationComboBox.setModel(new javax.swing.DefaultComboBoxModel<String>(comboBoxLocations.keySet().toArray(new String[0])));
-        locationComboBox.setSelectedItem("Appdata");
+        locationComboBox.setModel(new javax.swing.DefaultComboBoxModel<String>(comboBoxLocationsOrdered.toArray(new String[0])));
+        locationComboBox.setSelectedItem("Choose Location");
         locationComboBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 locationComboBoxItemStateChanged(evt);
@@ -69,7 +86,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
 
         pathTextField.setEditable(false);
         pathTextField.setFont(new java.awt.Font("Segoe UI", 0, 10)); // NOI18N
-        pathTextField.setText(finder.configAt(ConfigLocation.APPDATA).getAbsolutePath());
+        pathTextField.setText("< Choose Location >");
 
         createBlankButton.setText("Create New Blank Config File");
         createBlankButton.addActionListener(new java.awt.event.ActionListener() {
@@ -141,7 +158,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         }).start();
     }
     
-    public void getInitializedFileAsync(BiConsumer<Config, IOException> callback) {
+    public void getInitializedFileAsync(BiConsumer<ConfigFile, IOException> callback) {
         synchronized (stateKey) {
             if (state != State.WAITING) {
                 throw new IllegalStateException("This dialog is already being used to initialize a config file!");
@@ -153,7 +170,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         this.setVisible(true);
     }
     
-    public Config getInitializedFile() throws IOException {
+    public ConfigFile getInitializedFile() throws IOException {
         synchronized (stateKey) {
             if (state != State.WAITING) {
                 throw new IllegalStateException("This dialog is already being used to initialize a config file!");
@@ -166,14 +183,16 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
             synchronized (syncKey) {
                 result = res;
                 error = err;
+                callbackRan = true;
                 syncKey.notifyAll();
             }
         };
+        callbackRan = false;
         setInterfaceEnabled(true);
         setVisible(true);
         try {
             synchronized (syncKey) {
-                while ((result == null) && (error == null)) {
+                while (!callbackRan) {
                     syncKey.wait();
                 }
             }
@@ -188,20 +207,26 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
     }
     
     private void createBlankButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createBlankButtonActionPerformed
+        ConfigLocation choice;
         synchronized (stateKey) {
             if (state != State.CHOOSING_LOCATION) {
                 // ignore button press, either the window is closed or the dialog
                 // is selecting a file to copy, so we won't interrupt that process
                 return;
             }
-            state = State.WAITING;
-            setVisible(false);
-            closeSelf();
+            choice = comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()));
+            if (choice != null) {
+                state = State.WAITING;
+                setVisible(false);
+                closeSelf();
+            } else {
+                pathTextField.setText("ERROR: Choose a location before continuing!");
+                pathTextField.setForeground(Color.red);
+                return;
+            }
         }
         try {
-            Config cf = new ConfigFile(finder.configAt(
-                    comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()))
-            ));
+            ConfigFile cf = new ConfigFile(finder.configAt(choice));
             callback.accept(cf, null);
         } catch (IOException ex) {
             callback.accept(null, ex);
@@ -209,13 +234,21 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
     }//GEN-LAST:event_createBlankButtonActionPerformed
 
     private void createCopyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCopyButtonActionPerformed
+        ConfigLocation choice;
         synchronized (stateKey) {
             if (state != State.CHOOSING_LOCATION) {
                 // ignore button press, either the window is closed or we're already
                 // selecting a file to copy
                 return;
             }
-            state = State.CHOOSING_COPY;
+            choice = comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()));
+            if (choice != null) {
+                state = state = State.CHOOSING_COPY;
+            } else {
+                pathTextField.setText("ERROR: Choose a location before continuing!");
+                pathTextField.setForeground(Color.red);
+                return;
+            }
         }
         setInterfaceEnabled(false);
         FileSelectFrame fsf = new FileSelectFrame(new FileNameExtensionFilter(".ini files", "ini"), FileSelectFrame.Mode.FILES_ONLY);
@@ -225,9 +258,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
                 state = State.CHOOSING_LOCATION;
                 setInterfaceEnabled(true);
             } else {
-                File newfile = finder.configAt(
-                        comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()))
-                );
+                File newfile = finder.configAt(choice);
                 try {
                     newfile.getParentFile().mkdirs();
                     Files.copy(oldfile.toPath(), newfile.toPath());
@@ -239,7 +270,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
                     setInterfaceEnabled(true);
                 }
                 try {
-                    Config cf_new = new ConfigFile(newfile);
+                    ConfigFile cf_new = new ConfigFile(newfile);
                     closeSelf();
                     callback.accept(cf_new, null);
                 } catch (IOException ex) {
@@ -251,16 +282,32 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
     }//GEN-LAST:event_createCopyButtonActionPerformed
 
     private void locationComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_locationComboBoxActionPerformed
-        pathTextField.setText(finder.configAt(
-                comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()))
-        ).getAbsolutePath());
+        ConfigLocation choice = comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()));
+        if (choice == null) {
+            pathTextField.setText("< Choose Location >");
+        } else {
+            pathTextField.setText(finder.configAt(choice).getAbsolutePath());
+        }
+        pathTextField.setForeground(Color.black);
     }//GEN-LAST:event_locationComboBoxActionPerformed
 
     private void locationComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_locationComboBoxItemStateChanged
-        pathTextField.setText(finder.configAt(
-                comboBoxLocations.get(locationComboBox.getItemAt(locationComboBox.getSelectedIndex()))
-        ).getAbsolutePath());
+        locationComboBoxActionPerformed(null);
     }//GEN-LAST:event_locationComboBoxItemStateChanged
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        synchronized (stateKey) {
+            if (state != State.CHOOSING_LOCATION) {
+                // ignore button press, either the window is closed or the dialog
+                // is selecting a file to copy, so we won't interrupt that process
+                return;
+            }
+            state = State.WAITING;
+            setVisible(false);
+            closeSelf();
+        }
+        callback.accept(null, null);
+    }//GEN-LAST:event_formWindowClosing
     
     private enum State {
         WAITING,
@@ -272,11 +319,13 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
     
     private final Object stateKey;
     private volatile State state;
-    private BiConsumer<Config, IOException> callback;
+    private BiConsumer<ConfigFile, IOException> callback;
     
     private final Object syncKey;
-    private volatile Config result;
+    private volatile ConfigFile result;
     private volatile IOException error;
+    private volatile boolean callbackRan;
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton createBlankButton;
     private javax.swing.JButton createCopyButton;

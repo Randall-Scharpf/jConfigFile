@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
 
 public class InteractiveConfigInitializer {
     
-    public static Config findOrCreateConfig(Class<?> callee, String configName) throws IOException {
+    public static ConfigFile findOrCreateConfig(Class<?> callee, String configName) throws IOException {
         ConfigFinder finder = new ConfigFinder(callee, configName);
         File file = finder.searchForConfig();
         if (!file.exists()) {
@@ -23,7 +23,7 @@ public class InteractiveConfigInitializer {
         }
     }
     
-    public static void findOrCreateConfigAsync(Class<?> callee, String configName, BiConsumer<Config, IOException> callback) {
+    public static void findOrCreateConfigAsync(Class<?> callee, String configName, BiConsumer<ConfigFile, IOException> callback) {
         ConfigFinder finder = new ConfigFinder(callee, configName);
         File file = finder.searchForConfig();
         if (!file.exists()) {
@@ -31,7 +31,7 @@ public class InteractiveConfigInitializer {
             d.getInitializedFileAsync(callback);
         } else {
             try {
-                Config cf = new ConfigFile(file);
+                ConfigFile cf = new ConfigFile(file);
                 callback.accept(cf, null);
             } catch (IOException ex) {
                 callback.accept(null, ex);
@@ -58,10 +58,17 @@ public class InteractiveConfigInitializer {
     public static void findOrCreateConfigAsyncWithFallback(Class<?> callee, String configName, Consumer<Config> callback) {
         findOrCreateConfigAsync(callee, configName, (res, err) -> {
             if (res == null) {
-                JOptionPane.showMessageDialog(null,
-                        "Failed to open config file with message: " + (err == null ? "user cancelled" : err.getMessage()) +
-                        "\nConfiguration changes will not be persistent.",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                if (err != null) {
+                    JOptionPane.showMessageDialog(null,
+                            "Failed to open config file with message: " + err.getMessage() +
+                            "\nConfiguration changes will not be persistent.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "User closed config initializer dialog without creating config file" +
+                            "\nConfiguration changes will not be persistent.",
+                            "Error", JOptionPane.WARNING_MESSAGE);
+                }
                 callback.accept(new ConfigMap());
             } else {
                 callback.accept(res);
