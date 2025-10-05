@@ -63,9 +63,9 @@ public class FindOrCreateConfigAsyncWithFallbackTestHeadless {
                     getClass(),
                     "jConfigFile_InteractiveConfigInitializerTest",
                     (res) -> {
-                        assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
-                        assertEquals(1, cfg.getKeys().size());
-                        assertDoesNotThrow(cfg::close);
+                        assertEquals(fileId, res.getKeyOrDefault("fileId", ""));
+                        assertEquals(1, res.getKeys().size());
+                        assertDoesNotThrow(res::close);
                         // clean up generated files
                         f.delete();
                     }
@@ -85,5 +85,6 @@ public class FindOrCreateConfigAsyncWithFallbackTestHeadless {
             );
         });
     }
+
 
 }
