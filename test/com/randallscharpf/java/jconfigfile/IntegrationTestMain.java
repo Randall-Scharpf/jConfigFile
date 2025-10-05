@@ -10,7 +10,6 @@ public class IntegrationTestMain {
     public static void main(String[] args) {
         // TODO: add integration tests
         System.out.println("INTEGRATION TEST");
-//        new ParallelGuiTester(null).awaitAndAcknowledgeDialog();
-        new FindOrCreateConfigAsyncTestGui().testCreateCopyFileCreationError();
     }
 }
+
