@@ -8,7 +8,7 @@ public class IntegrationTestMain {
     public static void main(String[] args) {
         // TODO: add integration tests
         System.out.println("INTEGRATION TEST");
-        System.out.println("Headless: " + java.awt.GraphicsEnvironment.isHeadless());
-        System.out.println("done!");
+        System.out.println("testing unexpected failure");
+        exit(1);
     }
 }
