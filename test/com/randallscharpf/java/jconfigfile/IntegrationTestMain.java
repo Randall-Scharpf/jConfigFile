@@ -9,6 +9,6 @@ public class IntegrationTestMain {
         // TODO: add integration tests
         System.out.println("INTEGRATION TEST");
         System.out.println("testing unexpected failure");
-        exit(1);
+        System.exit(1);
     }
 }
