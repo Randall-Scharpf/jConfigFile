@@ -35,6 +35,7 @@ jobs:
       - run: |
           ant clean test
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: linux_test_results
           path: test_results
@@ -52,6 +53,7 @@ jobs:
       - run: |
           ant clean test
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: windows_test_results
           path: test_results

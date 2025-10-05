@@ -4,7 +4,6 @@
  */
 package com.randallscharpf.java.jconfigfile;
 
-import java.awt.event.ActionEvent;
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
 import java.util.function.Consumer;
@@ -86,7 +85,13 @@ public class FileSelectFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jFileChooser1ActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        jFileChooser1ActionPerformed(new java.awt.event.ActionEvent(this, JFileChooser.CANCEL_OPTION, "CancelSelection"));
+        jFileChooser1ActionPerformed(new java.awt.event.ActionEvent(
+                jFileChooser1,
+                java.awt.event.ActionEvent.ACTION_PERFORMED,
+                JFileChooser.CANCEL_SELECTION,
+                System.currentTimeMillis(),
+                java.awt.event.MouseEvent.BUTTON1_MASK
+        ));
     }//GEN-LAST:event_formWindowClosing
 
     public void selectFile(Consumer<File> callback) {
@@ -149,10 +154,11 @@ public class FileSelectFrame extends javax.swing.JFrame {
     }
     
     public void cancelSelection() {
-        jFileChooser1ActionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "CancelSelection"));
+        jFileChooser1.cancelSelection();
     }
     
     public void approveSelection() {
-        jFileChooser1ActionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "ApproveSelection"));
+        jFileChooser1.approveSelection();
     }
+
 }

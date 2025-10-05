@@ -5,6 +5,7 @@
 package com.randallscharpf.java.jconfigfile;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ConfigInitializerDialog extends javax.swing.JFrame {
@@ -330,11 +330,23 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
     // API to operate the GUI from another Java class
 
     public void clickCreateNewButton() {
-        createBlankButtonActionPerformed(null);
+        createBlankButtonActionPerformed(new java.awt.event.ActionEvent(
+                createBlankButton,
+                java.awt.event.ActionEvent.ACTION_PERFORMED,
+                createBlankButton.getText(),
+                System.currentTimeMillis(),
+                java.awt.event.MouseEvent.BUTTON1_MASK
+        ));
     }
     
     public void clickCreateCopyButton() {
-        createCopyButtonActionPerformed(null);
+        createCopyButtonActionPerformed(new java.awt.event.ActionEvent(
+                createCopyButton,
+                java.awt.event.ActionEvent.ACTION_PERFORMED,
+                createCopyButton.getText(),
+                System.currentTimeMillis(),
+                java.awt.event.MouseEvent.BUTTON1_MASK
+        ));
     }
     
     public void setDropdownSelection(ConfigLocation location) {

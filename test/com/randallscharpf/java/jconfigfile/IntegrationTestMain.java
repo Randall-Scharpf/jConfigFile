@@ -9,5 +9,6 @@ public class IntegrationTestMain {
         // TODO: add integration tests
         System.out.println("INTEGRATION TEST");
         System.out.println("Headless: " + java.awt.GraphicsEnvironment.isHeadless());
+        System.out.println("done!");
     }
 }
