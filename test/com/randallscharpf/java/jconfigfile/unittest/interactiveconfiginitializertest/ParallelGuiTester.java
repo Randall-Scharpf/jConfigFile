@@ -191,4 +191,20 @@ public class ParallelGuiTester {
         return lambda_result;
     }
     
+    public void awaitAndAcknowledgeDialog() {
+        new Thread(() -> {
+            while (true) {
+                for (Window w : Window.getWindows()) {
+                    if ((w.isShowing()) && (w instanceof javax.swing.JDialog)) {
+                        assertDoesNotThrow(() -> {
+                            Thread.sleep(GUI_SYNC_DELAY);
+                        });
+                        postWindowCloseEvent(w);
+                        return;
+                    }
+                }
+            }
+        }).start();
+    }
+    
 }

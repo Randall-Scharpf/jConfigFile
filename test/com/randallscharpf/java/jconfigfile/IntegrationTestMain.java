@@ -4,11 +4,13 @@
  */
 package com.randallscharpf.java.jconfigfile;
 
+import com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest.*;
+
 public class IntegrationTestMain {
     public static void main(String[] args) {
         // TODO: add integration tests
         System.out.println("INTEGRATION TEST");
-        System.out.println("testing unexpected failure");
-        System.exit(1);
+//        new ParallelGuiTester(null).awaitAndAcknowledgeDialog();
+        new FindOrCreateConfigAsyncTestGui().testCreateCopyFileCreationError();
     }
 }

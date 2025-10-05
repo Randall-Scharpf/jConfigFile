@@ -43,14 +43,18 @@ public class InteractiveConfigInitializer {
         try {
             Config cfg = findOrCreateConfig(callee, configName);
             if (cfg == null) {
+                JOptionPane.showMessageDialog(null,
+                        "User closed config initializer dialog without creating config file"
+                        + "\nConfiguration changes will not be persistent.",
+                        "Error", JOptionPane.WARNING_MESSAGE);
                 return new ConfigMap();
             }
             return cfg;
         } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null,
-                       "Failed to open config file with message: " + ex.getMessage() +
-                       "\nConfiguration changes will not be persistent.",
-                       "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null,
+                    "Failed to open config file with message: " + ex.getMessage()
+                    + "\nConfiguration changes will not be persistent.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return new ConfigMap();
         }
     }
