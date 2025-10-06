@@ -34,7 +34,12 @@ public class ParallelGuiTester {
     
     private final int GUI_SYNC_DELAY = 500;
 
-    private ConfigInitializerDialog getActiveConfigInitializerDialog() {
+    private ConfigInitializerDialog getActiveConfigInitializerDialog() throws InterruptedException {
+        try {
+            java.awt.EventQueue.invokeAndWait(() -> {});
+        } catch (java.lang.reflect.InvocationTargetException ex) {
+            // not possible for an empty runnable to throw an exception
+        }
         for (Window w : Window.getWindows()) {
             if ((w.isShowing()) && (w instanceof ConfigInitializerDialog)) {
                 return (ConfigInitializerDialog) w;
@@ -43,7 +48,12 @@ public class ParallelGuiTester {
         return null;
     }
     
-    private FileSelectFrame getActiveFileSelectFrame() {
+    private FileSelectFrame getActiveFileSelectFrame() throws InterruptedException {
+        try {
+            java.awt.EventQueue.invokeAndWait(() -> {});
+        } catch (java.lang.reflect.InvocationTargetException ex) {
+            // not possible for an empty runnable to throw an exception
+        }
         for (Window w : Window.getWindows()) {
             if ((w.isShowing()) && (w instanceof FileSelectFrame)) {
                 return (FileSelectFrame) w;
@@ -53,9 +63,11 @@ public class ParallelGuiTester {
     }
     
     private void postWindowCloseEvent(Window frame) {
-        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                new java.awt.event.WindowEvent(frame, java.awt.event.WindowEvent.WINDOW_CLOSING)
-        );
+        java.awt.EventQueue.invokeLater(() -> {
+            java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                    new java.awt.event.WindowEvent(frame, java.awt.event.WindowEvent.WINDOW_CLOSING)
+            );
+        });
     }
     
     public Config callSyncExpectNoPopup(Callable<Config> testFunction) {

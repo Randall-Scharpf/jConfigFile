@@ -4,7 +4,7 @@
  */
 package com.randallscharpf.java.jconfigfile;
 
-import com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest.*;
+import com.randallscharpf.java.jconfigfile.unittest.fileselectframetest.FileSelectFrameTestGui;
 
 public class IntegrationTestMain {
     public static void main(String[] args) {

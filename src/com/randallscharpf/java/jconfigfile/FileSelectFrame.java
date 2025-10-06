@@ -4,10 +4,16 @@
  */
 package com.randallscharpf.java.jconfigfile;
 
+import java.awt.Container;
 import java.io.File;
+import java.util.List;
 import javax.swing.filechooser.FileFilter;
 import java.util.function.Consumer;
+import javax.swing.AbstractButton;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.text.JTextComponent;
+import sun.swing.FilePane;
 
 public class FileSelectFrame extends javax.swing.JFrame {
 
@@ -102,7 +108,9 @@ public class FileSelectFrame extends javax.swing.JFrame {
             this.open = true;
         }
         this.callback = callback;
-        setVisible(true);
+        java.awt.EventQueue.invokeLater(() -> {
+            setVisible(true);
+        });
     }
     
     private Consumer<File> callback;
@@ -135,30 +143,58 @@ public class FileSelectFrame extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     // API to operate the GUI from another Java class
-
-    public void setSelectedFile(File f) {
-        boolean succeeded = false;
-        while (!succeeded) {
-            try {
-                jFileChooser1.setSelectedFile(f);
-                succeeded = true;
-            } catch (NullPointerException ex1) {
-                // API call came in so fast that the GUI wasn't ready yet
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException ex2) {
-                    throw new RuntimeException(ex2);
+    
+    private AbstractButton findButton(Container container, String text) {
+        for (java.awt.Component component : container.getComponents()) {
+            if (component instanceof AbstractButton) {
+                if (text.equals(((AbstractButton) component).getText())) {
+                    return (AbstractButton) component;
+                }
+            }
+            if (component instanceof Container) {
+                AbstractButton find = findButton((Container) component, text);
+                if (find != null) {
+                    return find;
                 }
             }
         }
+        return null;
+    }
+    
+    private JTextComponent findTextInput(Container container) {
+        for (java.awt.Component component : container.getComponents()) {
+            if (component instanceof JTextComponent) {
+                if (((JTextComponent) component).isEditable()) {
+                    return (JTextComponent) component;
+                }
+            }
+            if (component instanceof Container) {
+                JTextComponent find = findTextInput((Container) component);
+                if (find != null) {
+                    return find;
+                }
+            }
+        }
+        return null;
     }
     
     public void cancelSelection() {
-        jFileChooser1.cancelSelection();
+        java.awt.EventQueue.invokeLater(() -> {
+            findButton(this, "Cancel").doClick();
+        });
     }
     
     public void approveSelection() {
-        jFileChooser1.approveSelection();
+        java.awt.EventQueue.invokeLater(() -> {
+            findButton(this, "Open").doClick();
+        });
+    }
+    
+    public void setSelectedFile(File f) {
+        java.awt.EventQueue.invokeLater(() -> {
+            JTextComponent fileInput = findTextInput(this);
+            fileInput.setText(f.getAbsolutePath());
+        });
     }
 
 }

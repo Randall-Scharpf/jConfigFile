@@ -5,7 +5,6 @@
 package com.randallscharpf.java.jconfigfile;
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -166,30 +165,22 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
             state = State.CHOOSING_LOCATION;
         }
         this.callback = callback;
-        setInterfaceEnabled(true);
-        this.setVisible(true);
+        java.awt.EventQueue.invokeLater(() -> {
+            setInterfaceEnabled(true);
+            this.setVisible(true);
+        });
     }
     
     public ConfigFile getInitializedFile() throws IOException {
-        synchronized (stateKey) {
-            if (state != State.WAITING) {
-                throw new IllegalStateException("This dialog is already being used to initialize a config file!");
-            }
-            state = State.CHOOSING_LOCATION;
-        }
-        result = null;
-        error = null;
-        this.callback = (res, err) -> {
+        callbackRan = false;
+        getInitializedFileAsync((res, err) -> {
             synchronized (syncKey) {
                 result = res;
                 error = err;
                 callbackRan = true;
                 syncKey.notifyAll();
             }
-        };
-        callbackRan = false;
-        setInterfaceEnabled(true);
-        setVisible(true);
+        });
         try {
             synchronized (syncKey) {
                 while (!callbackRan) {
@@ -330,59 +321,34 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
     // API to operate the GUI from another Java class
 
     public void clickCreateNewButton() {
-        createBlankButtonActionPerformed(new java.awt.event.ActionEvent(
-                createBlankButton,
-                java.awt.event.ActionEvent.ACTION_PERFORMED,
-                createBlankButton.getText(),
-                System.currentTimeMillis(),
-                java.awt.event.MouseEvent.BUTTON1_MASK
-        ));
+        java.awt.EventQueue.invokeLater(() -> {
+            createBlankButton.doClick();
+        });
     }
     
     public void clickCreateCopyButton() {
-        createCopyButtonActionPerformed(new java.awt.event.ActionEvent(
-                createCopyButton,
-                java.awt.event.ActionEvent.ACTION_PERFORMED,
-                createCopyButton.getText(),
-                System.currentTimeMillis(),
-                java.awt.event.MouseEvent.BUTTON1_MASK
-        ));
+        java.awt.EventQueue.invokeLater(() -> {
+            createCopyButton.doClick();
+        });
     }
     
     public void setDropdownSelection(ConfigLocation location) {
-        boolean succeeded = false;
-        while (!succeeded) {
-            try {
-                for (Map.Entry<String, ConfigLocation> entry : comboBoxLocations.entrySet()) {
-                    if (entry.getValue() == location) {
-                        locationComboBox.setSelectedItem(entry.getKey());
-                    }
-                }
-                succeeded = true;
-            } catch (NullPointerException ex1) {
-                // API call came in so fast that the GUI wasn't ready yet
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException ex2) {
-                    throw new RuntimeException(ex2);
+        java.awt.EventQueue.invokeLater(() -> {
+            for (Map.Entry<String, ConfigLocation> entry : comboBoxLocations.entrySet()) {
+                if (entry.getValue() == location) {
+                    locationComboBox.setSelectedItem(entry.getKey());
                 }
             }
-        }
+        });
     }
 
-    public String getPreviewPath() {
-        while (true) {
-            try {
-                return pathTextField.getText();
-            } catch (NullPointerException ex1) {
-                // API call came in so fast that the GUI wasn't ready yet
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException ex2) {
-                    throw new RuntimeException(ex2);
-                }
-            }
+    public String getPreviewPath() throws InterruptedException {
+        try {
+            java.awt.EventQueue.invokeAndWait(() -> {});
+        } catch (java.lang.reflect.InvocationTargetException ex) {
+            // not possible for an empty runnable to throw an exception
         }
+        return pathTextField.getText();
     }
 
 }
