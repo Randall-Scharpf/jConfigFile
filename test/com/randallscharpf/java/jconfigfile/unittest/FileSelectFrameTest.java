@@ -5,12 +5,11 @@
 package com.randallscharpf.java.jconfigfile.unittest;
 
 import com.randallscharpf.java.jconfigfile.FileSelectFrame;
-import com.randallscharpf.java.jconfigfile.FileSelectFrame;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Timeout;
@@ -33,8 +32,8 @@ public class FileSelectFrameTest {
     public FileSelectFrameTest() {
     }
     
-    @BeforeAll
-    public void setUpClass() {
+    @BeforeEach
+    public void setUpTest() {
         testFile1 = new File(System.getProperty("user.home"), "FileSelectFrame_testfile1");
         testFile2 = new File(System.getProperty("user.home"), "FileSelectFrame_testfile2");
         testDir  = new File(System.getProperty("user.home"), "FileSelectFrame_testdir");
@@ -43,8 +42,8 @@ public class FileSelectFrameTest {
         assertDoesNotThrow(() -> { testDir.mkdirs(); });
     }
     
-    @AfterAll
-    public void tearDownClass() {
+    @AfterEach
+    public void tearDownTest() {
         assertTrue(testFile1.delete());
         assertTrue(testFile2.delete());
         assertTrue(testDir.delete());
@@ -53,6 +52,7 @@ public class FileSelectFrameTest {
     @Test
     public void testFilesOnly() {
         uut = new FileSelectFrame(FileSelectFrame.Mode.FILES_ONLY);
+        callbackRan = false;
         uut.selectFile((file) -> {
             assertEquals(testFile1, file);
             synchronized (syncLock) {
@@ -76,10 +76,11 @@ public class FileSelectFrameTest {
             }
         });
     }
-    
+
     @Test
     public void testFoldersOnly() {
         uut = new FileSelectFrame(FileSelectFrame.Mode.DIRECTORIES_ONLY);
+        callbackRan = false;
         uut.selectFile((file) -> {
             assertEquals(null, file);
             synchronized (syncLock) {
@@ -98,6 +99,7 @@ public class FileSelectFrameTest {
                 }
             }
         });
+        callbackRan = false;
         uut.selectFile((file) -> {
             assertEquals(testDir, file);
             synchronized (syncLock) {
@@ -117,10 +119,11 @@ public class FileSelectFrameTest {
             }
         });
     }
-    
+
     @Test
     public void testFilesAndFolders() {
         uut = new FileSelectFrame(FileSelectFrame.Mode.FILES_AND_DIRECTORIES);
+        callbackRan = false;
         uut.selectFile((file) -> {
             assertEquals(testFile1, file);
             synchronized (syncLock) {
@@ -139,6 +142,7 @@ public class FileSelectFrameTest {
                 }
             }
         });
+        callbackRan = false;
         uut.selectFile((file) -> {
             assertEquals(testDir, file);
             synchronized (syncLock) {
@@ -162,6 +166,7 @@ public class FileSelectFrameTest {
     @Test
     public void testCancel() {
         uut = new FileSelectFrame(FileSelectFrame.Mode.FILES_AND_DIRECTORIES);
+        callbackRan = false;
         uut.selectFile((file) -> {
             assertEquals(null, file);
             synchronized (syncLock) {
@@ -185,6 +190,7 @@ public class FileSelectFrameTest {
     @Test
     public void testCloseWindow() {
         uut = new FileSelectFrame(FileSelectFrame.Mode.FILES_AND_DIRECTORIES);
+        callbackRan = false;
         uut.selectFile((file) -> {
             assertEquals(null, file);
             synchronized (syncLock) {
