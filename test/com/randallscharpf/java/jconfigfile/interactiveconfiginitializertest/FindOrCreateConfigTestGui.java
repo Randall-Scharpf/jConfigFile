@@ -2,13 +2,12 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
  */
-package com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest;
+package com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest;
 
 import com.randallscharpf.java.jconfigfile.Config;
 import com.randallscharpf.java.jconfigfile.ConfigFile;
 import com.randallscharpf.java.jconfigfile.ConfigFinder;
 import com.randallscharpf.java.jconfigfile.ConfigLocation;
-import com.randallscharpf.java.jconfigfile.ConfigMap;
 import com.randallscharpf.java.jconfigfile.InteractiveConfigInitializer;
 
 import java.io.File;
@@ -26,12 +25,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisabledIf("java.awt.GraphicsEnvironment#isHeadless")
 @Timeout(value = 10, unit = TimeUnit.SECONDS)
-public class FindOrCreateConfigWithFallbackTestGui {
+public class FindOrCreateConfigTestGui {
 
     private final ConfigFinder standardLocator;
     private final ParallelGuiTester guiTester;
 
-    public FindOrCreateConfigWithFallbackTestGui() {
+    public FindOrCreateConfigTestGui() {
         standardLocator = new ConfigFinder(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
         guiTester = new ParallelGuiTester(standardLocator);
     }
@@ -65,7 +64,7 @@ public class FindOrCreateConfigWithFallbackTestGui {
             cfg.close();
             // make sure InteractiveConfigInitializer picks up the correct file
             cfg = guiTester.callSyncExpectNoPopup(() -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             });
             assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
             assertEquals(1, cfg.getKeys().size());
@@ -83,12 +82,12 @@ public class FindOrCreateConfigWithFallbackTestGui {
         assertDoesNotThrow(() -> {
             String fileId = hexString(64);
             Config cfg = guiTester.callSyncExpectPopup(loc, () -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             }, null, "CreateNew");
             cfg.setKey("fileId", fileId);
             cfg.close();
             cfg = guiTester.callSyncExpectNoPopup(() -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             });
             assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
             assertEquals(1, cfg.getKeys().size());
@@ -97,7 +96,7 @@ public class FindOrCreateConfigWithFallbackTestGui {
             File cfgFile = standardLocator.configAt(loc);
             assertTrue(
                     cfgFile.delete(),
-                    String.format("Failed to delete config file %s after findOrCreateConfigWithFallback created it", cfgFile.getAbsolutePath())
+                    String.format("Failed to delete config file %s after findOrCreateConfig created it", cfgFile.getAbsolutePath())
             );
         });
     }
@@ -105,11 +104,10 @@ public class FindOrCreateConfigWithFallbackTestGui {
     @Test
     public void testCloseDialogWithoutSelection() {
         assertDoesNotThrow(() -> {
-            guiTester.awaitAndAcknowledgeDialog();
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.APPDATA, () -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             }, null, "CloseWindow");
-            assertInstanceOf(ConfigMap.class, cfg);
+            assertNull(cfg);
         });
     }
     
@@ -119,11 +117,13 @@ public class FindOrCreateConfigWithFallbackTestGui {
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
             System.setProperty("user.home", "https://error-path");
-            guiTester.awaitAndAcknowledgeDialog();
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                assertThrows(java.io.IOException.class, () -> {
+                    InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                });
+                return null;
             }, null, "CreateNew");
-            assertInstanceOf(ConfigMap.class, cfg);
+            assertNull(cfg);
         } finally {
             System.setProperty("user.home", originalUserHome);
         }
@@ -141,13 +141,13 @@ public class FindOrCreateConfigWithFallbackTestGui {
             template.setKey("fileId", fileId);
             template.close();
             Config cfg = guiTester.callSyncExpectPopup(loc, () -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             }, templateFile.getPath(), "ApproveSelection");
             assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
             assertEquals(1, cfg.getKeys().size());
             cfg.close();
             cfg = guiTester.callSyncExpectNoPopup(() -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             });
             assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
             assertEquals(1, cfg.getKeys().size());
@@ -156,7 +156,7 @@ public class FindOrCreateConfigWithFallbackTestGui {
             File cfgFile = standardLocator.configAt(loc);
             assertTrue(
                     cfgFile.delete(),
-                    String.format("Failed to delete config file %s after findOrCreateConfigWithFallback created it", cfgFile.getAbsolutePath())
+                    String.format("Failed to delete config file %s after findOrCreateConfig created it", cfgFile.getAbsolutePath())
             );
             templateFile.delete();
         });
@@ -170,11 +170,10 @@ public class FindOrCreateConfigWithFallbackTestGui {
             Config template = new ConfigFile(templateFile);
             template.setKey("fileId", fileId);
             template.close();
-            guiTester.awaitAndAcknowledgeDialog();
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.APPDATA, () -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             }, templateFile.getPath(), "CancelSelection");
-            assertInstanceOf(ConfigMap.class, cfg);
+            assertNull(cfg);
             // clean up after outselves
             templateFile.delete();
         });
@@ -188,11 +187,10 @@ public class FindOrCreateConfigWithFallbackTestGui {
             Config template = new ConfigFile(templateFile);
             template.setKey("fileId", fileId);
             template.close();
-            guiTester.awaitAndAcknowledgeDialog();
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.APPDATA, () -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                return InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             }, templateFile.getPath(), "CloseWindow");
-            assertInstanceOf(ConfigMap.class, cfg);
+            assertNull(cfg);
             // clean up after outselves
             templateFile.delete();
         });
@@ -200,7 +198,6 @@ public class FindOrCreateConfigWithFallbackTestGui {
     
     @Test
     public void testCreateCopyFileCreationError() {
-        // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
         File templateFile = new ConfigFinder(getClass(), "jConfigFile_TestTemplate").configAt(ConfigLocation.APPDATA);
         String fileId = hexString(64);
         assertDoesNotThrow(() -> {
@@ -212,11 +209,13 @@ public class FindOrCreateConfigWithFallbackTestGui {
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
             System.setProperty("user.home", "https://error-path");
-            guiTester.awaitAndAcknowledgeDialog();
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
-                return InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                assertThrows(java.io.IOException.class, () -> {
+                    InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+                });
+                return null;
             }, templateFile.getPath(), "ApproveSelection");
-            assertInstanceOf(ConfigMap.class, cfg);
+            assertNull(cfg);
         } finally {
             System.setProperty("user.home", originalUserHome);
         }

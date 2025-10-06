@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
  */
-package com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest;
+package com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest;
 
 import com.randallscharpf.java.jconfigfile.Config;
 import com.randallscharpf.java.jconfigfile.ConfigFile;
@@ -25,11 +25,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIf("java.awt.GraphicsEnvironment#isHeadless")
 @Timeout(value = 10, unit = TimeUnit.SECONDS)
-public class FindOrCreateConfigAsyncTestHeadless {
+public class FindOrCreateConfigWithFallbackTestHeadless {
 
     private final ConfigFinder standardLocator;
 
-    public FindOrCreateConfigAsyncTestHeadless() {
+    public FindOrCreateConfigWithFallbackTestHeadless() {
         standardLocator = new ConfigFinder(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
     }
     
@@ -59,33 +59,20 @@ public class FindOrCreateConfigAsyncTestHeadless {
             cfg.setKey("fileId", fileId);
             cfg.close();
             // make sure InteractiveConfigInitializer picks up the correct file
-            InteractiveConfigInitializer.findOrCreateConfigAsync(
-                    getClass(),
-                    "jConfigFile_InteractiveConfigInitializerTest",
-                    (res, err) -> {
-                        assertNull(err);
-                        assertEquals(fileId, res.getKeyOrDefault("fileId", ""));
-                        assertEquals(1, res.getKeys().size());
-                        assertDoesNotThrow(res::close);
-                        // clean up generated files
-                        f.delete();
-                    }
-            );
+            cfg = InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+            assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
+            assertEquals(1, cfg.getKeys().size());
+            cfg.close();
+            // clean up generated files
+            f.delete();
         });
     }
 
     @Test
     public void testCreateNewFile() {
         assertThrows(java.awt.HeadlessException.class, () -> {
-            InteractiveConfigInitializer.findOrCreateConfigAsync(
-                    getClass(),
-                    "jConfigFile_InteractiveConfigInitializerTest",
-                    (res, err) -> {
-                        fail("Callback should not be triggered");
-                    }
-            );
+            InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
         });
     }
-
 
 }

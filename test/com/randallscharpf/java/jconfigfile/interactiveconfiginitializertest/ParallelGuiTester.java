@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest;
+package com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest;
 
 import com.randallscharpf.java.jconfigfile.Config;
 import com.randallscharpf.java.jconfigfile.ConfigFinder;

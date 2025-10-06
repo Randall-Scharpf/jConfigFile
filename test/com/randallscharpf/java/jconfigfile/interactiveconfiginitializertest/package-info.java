@@ -9,4 +9,4 @@
  * are included in the unit testing package primarily because they use assertions
  * and test fixtures from jUnit.
  */
-package com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest;
+package com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest;

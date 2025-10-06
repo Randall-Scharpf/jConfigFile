@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
  */
-package com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest;
+package com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest;
 
 import com.randallscharpf.java.jconfigfile.Config;
 import com.randallscharpf.java.jconfigfile.ConfigFile;
@@ -25,11 +25,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIf("java.awt.GraphicsEnvironment#isHeadless")
 @Timeout(value = 10, unit = TimeUnit.SECONDS)
-public class FindOrCreateConfigWithFallbackTestHeadless {
+public class FindOrCreateConfigTestHeadless {
 
     private final ConfigFinder standardLocator;
 
-    public FindOrCreateConfigWithFallbackTestHeadless() {
+    public FindOrCreateConfigTestHeadless() {
         standardLocator = new ConfigFinder(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
     }
     
@@ -59,7 +59,7 @@ public class FindOrCreateConfigWithFallbackTestHeadless {
             cfg.setKey("fileId", fileId);
             cfg.close();
             // make sure InteractiveConfigInitializer picks up the correct file
-            cfg = InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+            cfg = InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
             assertEquals(fileId, cfg.getKeyOrDefault("fileId", ""));
             assertEquals(1, cfg.getKeys().size());
             cfg.close();
@@ -71,7 +71,7 @@ public class FindOrCreateConfigWithFallbackTestHeadless {
     @Test
     public void testCreateNewFile() {
         assertThrows(java.awt.HeadlessException.class, () -> {
-            InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
+            InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
         });
     }
 

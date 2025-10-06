@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
  */
-package com.randallscharpf.java.jconfigfile.unittest.interactiveconfiginitializertest;
+package com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest;
 
 import com.randallscharpf.java.jconfigfile.Config;
 import com.randallscharpf.java.jconfigfile.ConfigFile;
@@ -25,11 +25,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIf("java.awt.GraphicsEnvironment#isHeadless")
 @Timeout(value = 10, unit = TimeUnit.SECONDS)
-public class FindOrCreateConfigAsyncWithFallbackTestHeadless {
+public class FindOrCreateConfigAsyncTestHeadless {
 
     private final ConfigFinder standardLocator;
 
-    public FindOrCreateConfigAsyncWithFallbackTestHeadless() {
+    public FindOrCreateConfigAsyncTestHeadless() {
         standardLocator = new ConfigFinder(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
     }
     
@@ -59,10 +59,11 @@ public class FindOrCreateConfigAsyncWithFallbackTestHeadless {
             cfg.setKey("fileId", fileId);
             cfg.close();
             // make sure InteractiveConfigInitializer picks up the correct file
-            InteractiveConfigInitializer.findOrCreateConfigAsyncWithFallback(
+            InteractiveConfigInitializer.findOrCreateConfigAsync(
                     getClass(),
                     "jConfigFile_InteractiveConfigInitializerTest",
-                    (res) -> {
+                    (res, err) -> {
+                        assertNull(err);
                         assertEquals(fileId, res.getKeyOrDefault("fileId", ""));
                         assertEquals(1, res.getKeys().size());
                         assertDoesNotThrow(res::close);
@@ -76,10 +77,10 @@ public class FindOrCreateConfigAsyncWithFallbackTestHeadless {
     @Test
     public void testCreateNewFile() {
         assertThrows(java.awt.HeadlessException.class, () -> {
-            InteractiveConfigInitializer.findOrCreateConfigAsyncWithFallback(
+            InteractiveConfigInitializer.findOrCreateConfigAsync(
                     getClass(),
                     "jConfigFile_InteractiveConfigInitializerTest",
-                    (res) -> {
+                    (res, err) -> {
                         fail("Callback should not be triggered");
                     }
             );

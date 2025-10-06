@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
  */
-package com.randallscharpf.java.jconfigfile.unittest.fileselectframetest;
+package com.randallscharpf.java.jconfigfile.unittest;
 
+import com.randallscharpf.java.jconfigfile.FileSelectFrame;
 import com.randallscharpf.java.jconfigfile.FileSelectFrame;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -13,11 +14,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.condition.DisabledIf;
 
-@EnabledIf("java.awt.GraphicsEnvironment#isHeadless")
+@DisabledIf("java.awt.GraphicsEnvironment#isHeadless")
 @Timeout(value = 10, unit = TimeUnit.SECONDS)
-public class FileSelectFrameTestHeadless {
+public class FileSelectFrameTest {
     
     private FileSelectFrame uut;
     private File testFile1;
@@ -29,7 +30,7 @@ public class FileSelectFrameTestHeadless {
     
     private final int GUI_SYNC_DELAY = 500;
     
-    public FileSelectFrameTestHeadless() {
+    public FileSelectFrameTest() {
     }
     
     @BeforeAll
