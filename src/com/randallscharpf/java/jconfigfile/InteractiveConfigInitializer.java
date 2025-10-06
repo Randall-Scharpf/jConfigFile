@@ -16,13 +16,13 @@ public class InteractiveConfigInitializer {
         ConfigFinder finder = new ConfigFinder(callee, configName);
         File file = finder.searchForConfig();
         if (!file.exists()) {
-//            if (java.awt.GraphicsEnvironment.isHeadless()) {
-//                // TODO: support headless environments
-//                throw new UnsupportedOperationException(new java.awt.HeadlessException());
-//            } else {
+            if (java.awt.GraphicsEnvironment.isHeadless()) {
+                // TODO: support headless environments
+                throw new UnsupportedOperationException(new java.awt.HeadlessException());
+            } else {
                 ConfigInitializerDialog d = new ConfigInitializerDialog(finder);
                 return d.getInitializedFile();
-//            }
+            }
         } else {
             return new ConfigFile(file);
         }
@@ -32,13 +32,13 @@ public class InteractiveConfigInitializer {
         ConfigFinder finder = new ConfigFinder(callee, configName);
         File file = finder.searchForConfig();
         if (!file.exists()) {
-//            if (java.awt.GraphicsEnvironment.isHeadless()) {
-//                // TODO: support headless environments
-//                throw new UnsupportedOperationException(new java.awt.HeadlessException());
-//            } else {
+            if (java.awt.GraphicsEnvironment.isHeadless()) {
+                // TODO: support headless environments
+                throw new UnsupportedOperationException(new java.awt.HeadlessException());
+            } else {
                 ConfigInitializerDialog d = new ConfigInitializerDialog(finder);
                 d.getInitializedFileAsync(callback);
-//            }
+            }
         } else {
             try {
                 ConfigFile cf = new ConfigFile(file);
