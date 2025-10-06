@@ -6,14 +6,11 @@ package com.randallscharpf.java.jconfigfile;
 
 import java.awt.Container;
 import java.io.File;
-import java.util.List;
 import javax.swing.filechooser.FileFilter;
 import java.util.function.Consumer;
 import javax.swing.AbstractButton;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.text.JTextComponent;
-import sun.swing.FilePane;
 
 public class FileSelectFrame extends javax.swing.JFrame {
 
