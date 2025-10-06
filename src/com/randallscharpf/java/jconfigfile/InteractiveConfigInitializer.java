@@ -17,8 +17,8 @@ public class InteractiveConfigInitializer {
         File file = finder.searchForConfig();
         if (!file.exists()) {
             if (java.awt.GraphicsEnvironment.isHeadless()) {
-                // TODO: support headless environments
-                throw new UnsupportedOperationException(new java.awt.HeadlessException());
+                // TODO: support headless environments by using terminal to set up config file
+                throw new java.awt.HeadlessException();
             } else {
                 ConfigInitializerDialog d = new ConfigInitializerDialog(finder);
                 return d.getInitializedFile();
@@ -33,8 +33,8 @@ public class InteractiveConfigInitializer {
         File file = finder.searchForConfig();
         if (!file.exists()) {
             if (java.awt.GraphicsEnvironment.isHeadless()) {
-                // TODO: support headless environments
-                throw new UnsupportedOperationException(new java.awt.HeadlessException());
+                // TODO: support headless environments by using terminal to set up config file
+                throw new java.awt.HeadlessException();
             } else {
                 ConfigInitializerDialog d = new ConfigInitializerDialog(finder);
                 d.getInitializedFileAsync(callback);

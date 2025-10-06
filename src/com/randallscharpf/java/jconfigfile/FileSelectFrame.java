@@ -75,16 +75,18 @@ public class FileSelectFrame extends javax.swing.JFrame {
             }
             this.open = false;
         }
-        switch (evt.getActionCommand()) {
-            case "CancelSelection":
-                dispose();
-                callback.accept(null);
-                break;
-            case "ApproveSelection":
-                dispose();
-                callback.accept(jFileChooser1.getSelectedFile());
-                break;
-        }
+        new Thread(() -> {
+            switch (evt.getActionCommand()) {
+                case "CancelSelection":
+                    dispose();
+                    callback.accept(null);
+                    break;
+                case "ApproveSelection":
+                    dispose();
+                    callback.accept(jFileChooser1.getSelectedFile());
+                    break;
+            }
+        }).start();
     }//GEN-LAST:event_jFileChooser1ActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing

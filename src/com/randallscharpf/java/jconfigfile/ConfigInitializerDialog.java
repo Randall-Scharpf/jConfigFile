@@ -216,12 +216,14 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
                 return;
             }
         }
-        try {
-            ConfigFile cf = new ConfigFile(finder.configAt(choice));
-            callback.accept(cf, null);
-        } catch (IOException ex) {
-            callback.accept(null, ex);
-        }
+        new Thread(() -> {
+            try {
+                ConfigFile cf = new ConfigFile(finder.configAt(choice));
+                callback.accept(cf, null);
+            } catch (IOException ex) {
+                callback.accept(null, ex);
+            }
+        }).start();
     }//GEN-LAST:event_createBlankButtonActionPerformed
 
     private void createCopyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCopyButtonActionPerformed

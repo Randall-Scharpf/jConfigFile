@@ -12,18 +12,18 @@ import com.randallscharpf.java.jconfigfile.InteractiveConfigInitializer;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.AfterAll;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeAll;
 
-@EnabledIf("java.awt.GraphicsEnvironment#isHeadless")
 @Timeout(value = 10, unit = TimeUnit.SECONDS)
 public class FindOrCreateConfigAsyncTestHeadless {
 
@@ -39,6 +39,19 @@ public class FindOrCreateConfigAsyncTestHeadless {
             randomHex += String.format("%x", (int) (Math.random() * 16));
         }
         return randomHex;
+    }
+    
+    private String originalHeadlessProperty;
+    
+    @BeforeAll
+    public void setUpClass() {
+        originalHeadlessProperty = System.getProperty("java.awt.headless");
+        System.setProperty("java.awt.headless", "false");
+    }
+    
+    @AfterAll
+    public void tearDownClass() {
+        System.setProperty("java.awt.headless", originalHeadlessProperty);
     }
 
     @BeforeEach
