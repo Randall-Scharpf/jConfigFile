@@ -4,16 +4,17 @@
  */
 package com.randallscharpf.java.jconfigfile;
 
-import com.randallscharpf.java.jconfigfile.unittest.FileSelectFrameTest;
+//import com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest.FindOrCreateConfigWithFallbackTestHeadless;
 
 public class IntegrationTestMain {
     public static void main(String[] args) {
         // TODO: add integration tests
         System.out.println("INTEGRATION TEST");
-        FileSelectFrameTest tester = new FileSelectFrameTest();
-        tester.setUpTest();
-        tester.testFilesOnly();
-        tester.tearDownTest();
+//        FindOrCreateConfigWithFallbackTestHeadless tester = new FindOrCreateConfigWithFallbackTestHeadless();
+//        tester.setUpTest();
+//        tester.setUpClass();
+//        tester.testFilesOnly();
+//        tester.tearDownClass();
     }
 }
 
