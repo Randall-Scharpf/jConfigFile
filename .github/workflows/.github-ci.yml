@@ -19,7 +19,7 @@ jobs:
           ant clean jar
       - uses: actions/upload-artifact@v4
         with:
-          name: build_artifacts
+          name: jar
           path: dist/jar
 
   build_javadoc:
@@ -36,7 +36,7 @@ jobs:
           ant clean javadoc
       - uses: actions/upload-artifact@v4
         with:
-          name: build_artifacts
+          name: javadoc
           path: dist/javadoc
 
   run_tests_linux:
@@ -74,3 +74,4 @@ jobs:
         with:
           name: windows_test_results
           path: test_results
+
