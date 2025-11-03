@@ -52,8 +52,8 @@
     </target>
 
     <target name="jar" depends="compile">
-        <mkdir dir="${DIST}"/>
-        <jar jarfile="${DIST}/jConfigFile.jar" basedir="${BUILD}"/>
+        <mkdir dir="${DIST}/jar"/>
+        <jar jarfile="${DIST}/jar/jConfigFile.jar" basedir="${BUILD}"/>
     </target>
 
     <target name="unit_test" depends="compile_test">
@@ -82,5 +82,17 @@
 
     <target name="test" depends="unit_test, integration_test">
         <echo message="Finished unit tests and integration tests!"/>
+    </target>
+
+    <target name="javadoc" depends="compile">
+        <mkdir dir="${DIST}/javadoc"/>
+        <javadoc destdir="${DIST}/javadoc" failonerror="true" windowtitle="jConfigFile | Java | Randall Scharpf">
+            <classpath>
+                <pathelement location="${BUILD}"/>
+            </classpath>
+            <fileset dir="${SRC}">
+                <filename name="**/*.java"/>
+            </fileset>
+        </javadoc>
     </target>
 </project>

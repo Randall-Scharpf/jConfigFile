@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package com.randallscharpf.java.jconfigfile;
 
 import java.awt.Color;
@@ -15,9 +11,31 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+/**
+ * Interactive GUI to allow a user to set up a configuration file in a standard location.
+ * 
+ * Allows the user to select an existing configuration file from an unsupported location
+ * and copy it to a supported location or to create a new, blank configuration file in a
+ * selected location. The API exposes methods to synchronously or asynchronously
+ * request the result of the interactive operation, which is a {@link ConfigFile}.
+ * The API also exposes methods to interacting with the GUI automatically for testing.
+ */
 public class ConfigInitializerDialog extends javax.swing.JFrame {
     
+    /**
+     * A {@link java.util.Map} with the text for each possible selection in the drop-down
+     * box on the GUI and the associated {@link ConfigLocation}.
+     * 
+     * Includes a default text value shown to users who have not yet selected a location
+     * which maps to {@code null} as well as a text value mapping to every declared
+     * {@link ConfigLocation}.
+     */
     private static final Map<String, ConfigLocation> comboBoxLocations;
+
+    /**
+     * A {@link java.util.List} of the keys in {@link #comboBoxLocations} in the order
+     * they should appear to the user.
+     */
     private static final List<String> comboBoxLocationsOrdered;
     
     static {
@@ -37,6 +55,18 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         comboBoxLocationsOrdered.add("/etc Folder");
     }
 
+    /**
+     * Constructs a {@code ConfigInitializerDialog} for the application described
+     * by the provided {@link ConfigFinder}.
+     * 
+     * The created dialog is initially set to hidden ({@code isVisible() == false}).
+     * Instead of directly calling {@code setVisible(true)}, user code should call either
+     * {@code getInitializedFile()} or {@code getInitializedFileAsync(callback)}, which sets up
+     * internal state variables and callbacks to ensure user code receives exactly
+     * one user selection once it is made before making the dialog visible itself.
+     * 
+     * @param finder {@link ConfigFinder} for the application which needs its configuration initialized
+     */
     public ConfigInitializerDialog(ConfigFinder finder) {
         this.finder = finder;
         this.syncKey = new Object();
@@ -149,14 +179,45 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         createBlankButton.setEnabled(enabled);
         createCopyButton.setEnabled(enabled);
     }
-    
+
     private void closeSelf() {
         setVisible(false);
         new Thread(() -> {
             dispose();
         }).start();
     }
-    
+
+    /**
+     * Opens the dialog and returns immediately, then later calls a provided callback
+     * with the configuration produced by the user's selection.
+     * 
+     * Once this method is called on a dialog, user code must wait until the callback
+     * runs before calling it again or calling the synchronous version of this method.
+     * An {@code IllegalStateException} will be thrown if user code does not adhere
+     * to this requirement.
+     * 
+     * When the user selects and confirms the desired qualities of the configuration file
+     * to initialize, the dialog will close and attempt to create a {@link ConfigFile}
+     * corresponding to the selected characteristics.
+     * <ul>
+     * <li>
+     *   If the attempt is successful, {@code callback} will be executed with the
+     *   first parameter set to the created file and the second parameter set to {@code null}.
+     * </li>
+     * <li>
+     *   If the attempt is unsuccessful, {@code callback} will be executed with the
+     *   first parameter set to {@code null} and the second parameter set to an
+     *   appropriate exception describing the failure.
+     * </li>
+     * <li>
+     *   If the user closes the dialog without making any selection, {@code callback}
+     *   will be executed with both parameters set to {@code null}.
+     * </li>
+     * </ul>
+     * 
+     * @param callback to be executed when the user interaction is complete
+     * @throws IllegalStateException if the dialog is already being used to select a file
+     */
     public void getInitializedFileAsync(BiConsumer<ConfigFile, IOException> callback) {
         synchronized (stateKey) {
             if (state != State.WAITING) {
@@ -170,7 +231,27 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
             this.setVisible(true);
         });
     }
-    
+
+    /**
+     * Opens the dialog and blocks until user input, then returns the configuration
+     * produced by the user's selection.
+     * 
+     * User code must not call this method from multiple threads at once, or call this
+     * method while its asynchronous version is still awaiting user input.
+     * An {@code IllegalStateException} will be thrown if user code does not adhere
+     * to this requirement.
+     * 
+     * When the user selects and confirms the desired qualities of the configuration file
+     * to initialize, the dialog will close and attempt to create a {@link ConfigFile}
+     * corresponding to the selected characteristics. If the attempt is successful,
+     * the configuration file will be returned, otherwise an exception is thrown.
+     * If the user closes the dialog without making any selection, {@code null} will
+     * be returned.
+     * 
+     * @return an initialized configuration file located according to user input
+     * @throws IOException if initializing a configuration file as the user requests is impossible
+     * @throws IllegalStateException if the dialog is already being used to select a file
+     */
     public ConfigFile getInitializedFile() throws IOException {
         callbackRan = false;
         getInitializedFileAsync((res, err) -> {
@@ -299,41 +380,145 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         CHOOSING_LOCATION,
         CHOOSING_COPY
     }
-    
+
+    /**
+     * Member variable referencing the constructor parameter {@code finder}.
+     */
     private final ConfigFinder finder;
-    
+
+    /**
+     * Object on which the current state of the object is synchronized, to ensure
+     * correct behavior from multiple threads.
+     */
     private final Object stateKey;
+    /**
+     * Current state of the dialog.
+     * 
+     * <table>
+     * <caption>
+     *   <b>Possible dialog states</b>
+     * </caption>
+     * <tr>
+     *   <td><u>State</u></td>
+     *   <td><u>Usage</u></td>
+     * </tr>
+     * <tr>
+     *   <td>{@link State#WAITING}</td>
+     *   <td>
+     *     The dialog is hidden and waiting for a call to one of the {@code getInitializedFile} methods.
+     *   </td>
+     * </tr>
+     * <tr>
+     *   <td>{@link State#CHOOSING_LOCATION}</td>
+     *   <td>
+     *     The dialog is visible and waiting for the user to press one of the buttons
+     *     or to close the dialog manually. A callback has been registered, and the
+     *     {@code getInitializedFile} are not allowed to be called.
+     *   </td>
+     * </tr>
+     * <tr>
+     *   <td>{@link State#CHOOSING_COPY}</td>
+     *   <td>
+     *     The dialog is visible and has opened a {@link FileSelectFrame} where the user
+     *     can select a file to copy to make the new configuration file. A callback
+     *     has been registered, and the {@code getInitializedFile} are not allowed to
+     *     be called.
+     *   </td>
+     * </tr>
+     * </table>
+     */
     private volatile State state;
+    /**
+     * Callback to run when the user takes appropriate action.
+     * 
+     * This variable's value must not be used when {@code this.state == State.WAITING}.
+     */
     private BiConsumer<ConfigFile, IOException> callback;
-    
+
+    /**
+     * Object which is waited on in order to implement {@link #getInitializedFile}
+     * with a call to {@link #getInitializedFileAsync}.
+     */
     private final Object syncKey;
+    /**
+     * Internal shared memory used to transfer the result of an internally-registered
+     * callback to user code which behaves synchronously.
+     */
     private volatile ConfigFile result;
+    /**
+     * Internal shared memory used to transfer an exception generated by an internally-registered
+     * callback to user code which behaves synchronously.
+     */
     private volatile IOException error;
+    /**
+     * Internal shared memory used to detect if an internally-registered callback
+     * has run from within the thread used by user code.
+     */
     private volatile boolean callbackRan;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    /**
+    * Button for users to confirm the selected location and request
+    * that a new, blank configuration file be created there.
+    */
     private javax.swing.JButton createBlankButton;
+    /**
+    * Button for users to confirm the selected location and request
+    * that an existing configuration file be copied there. A dialog
+    * will open to ask the user what existing configuration file to
+    * use.
+    */
     private javax.swing.JButton createCopyButton;
+    /**
+    * First line of prompt text.
+    */
     private javax.swing.JLabel jLabel1;
+    /**
+    * Second line of prompt text.
+    */
     private javax.swing.JLabel jLabel2;
+    /**
+    * Dropdown menu which is used to select a configuration
+    * location.
+    */
     private javax.swing.JComboBox<String> locationComboBox;
+    /**
+    * Text field to indicate what absolute path corresponds to the
+    * selected configuration location. Also shows help to the user
+    * when they have interacted with the GUI incorrectly. Paths are
+    * shown in default black text, while errors are shown in red.
+    */
     private javax.swing.JTextField pathTextField;
     // End of variables declaration//GEN-END:variables
 
     // API to operate the GUI from another Java class
 
+    /**
+     * Clicks the GUI button labeled "Create New Blank Config File". The click is
+     * invoked asynchronously on the AWT EventQueue.
+     */
     public void clickCreateNewButton() {
         java.awt.EventQueue.invokeLater(() -> {
             createBlankButton.doClick();
         });
     }
-    
+
+    /**
+     * Clicks the GUI button labeled "Create Config File from Existing File". The
+     * click is invoked asynchronously on the AWT EventQueue.
+     */
     public void clickCreateCopyButton() {
         java.awt.EventQueue.invokeLater(() -> {
             createCopyButton.doClick();
         });
     }
-    
+
+    /**
+     * Sets the selected item in the dropdown menu of possible config locations.
+     * The selection is invoked asynchronously on the AWT EventQueue.
+     * 
+     * @param location the new dropdown menu selection
+     */
     public void setDropdownSelection(ConfigLocation location) {
         java.awt.EventQueue.invokeLater(() -> {
             for (Map.Entry<String, ConfigLocation> entry : comboBoxLocations.entrySet()) {
@@ -344,6 +529,15 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         });
     }
 
+    /**
+     * Determines the text currently displayed in the text field on the GUI. This
+     * method first waits for all events on the AWT EventQueue to be processed, then
+     * it returns its value.
+     * 
+     * @return path displayed on the GUI, if one has been selected
+     * @throws InterruptedException if this thread is interrupted before all events
+     *                              on the AWT EventQueue are processed
+     */
     public String getPreviewPath() throws InterruptedException {
         try {
             java.awt.EventQueue.invokeAndWait(() -> {});

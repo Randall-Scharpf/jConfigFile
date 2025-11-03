@@ -45,6 +45,7 @@ public class ConfigFinderTest {
     public void testPathConflicts(ConfigLocation loc) {
         File f = uut.configAt(loc);
         assertFalse(f.exists());
+        System.out.printf("Path for %s is %s\n", loc.toString(), f.getAbsolutePath());
     }
 
     @ParameterizedTest

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.randallscharpf.java.jconfigfile;
 
 import java.io.IOException;
@@ -9,10 +5,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Map-backed {@link Config} implementation.
+ * 
+ * NOTE: Changes made to a config of this type do not persist beyond the lifetime
+ * of the object.
+ * 
+ * Stores key-value pairs in a map object. Null keys and values are permitted
+ * and passing `null` works in the same way as passing any actual string would.
+ * The getter and setter methods in this config implementation are NOT thread-safe.
+ * Users may use the {@code ConfigFile} itself as a synchronization key.
+ * The {@code save} and {@code close} methods of this implementation are NOOPs.
+ */
 public class ConfigMap implements Config {
 
     private final Map<String, String> pairings;
 
+    /**
+     * Creates a new {@link Config} backed by a map object.
+     */
     public ConfigMap() {
         this.pairings = new HashMap<>();
     }

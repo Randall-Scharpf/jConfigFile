@@ -20,7 +20,24 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: build_artifacts
-          path: dist
+          path: dist/jar
+
+  build_javadoc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: 'recurisve'
+      - uses: ./.github/actions/install-java-with-ivy-ubuntu
+        with:
+          ivy_version: $IVY_VERSION
+          ivy_sha512: $IVY_SHA512
+      - run: |
+          ant clean javadoc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build_artifacts
+          path: dist/javadoc
 
   run_tests_linux:
     runs-on: ubuntu-latest

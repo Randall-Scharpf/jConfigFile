@@ -182,6 +182,55 @@ public class ConfigFileTest {
     }
     
     @Test
+    public void testNullKeyValue() {
+        assertDoesNotThrow(() -> {
+            uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testKeySet").searchForConfig());
+            // ensure we know the pre-test state of the relevant keys in the file
+            uut.removeKey(null);
+            uut.removeKey("null");
+            uut.removeKey("null_str");
+            uut.removeKey("null_null");
+            Set<String> expected_result = new HashSet<>();
+            // check empty key set
+            assertEquals(expected_result, uut.getKeys());
+            // add key
+            uut.setKey("null", "null_str");
+            expected_result.add("null");
+            assertEquals(expected_result, uut.getKeys());
+            assertEquals("null_str", uut.getKeyOrDefault("null", "default"));
+            // add new key
+            uut.setKey(null, "null_null");
+            expected_result.add(null);
+            assertEquals(expected_result, uut.getKeys());
+            assertEquals("null_null", uut.getKeyOrDefault(null, "default"));
+            // overwrite old key
+            uut.setKey("null_null", null);
+            expected_result.add("null_null");
+            assertEquals(expected_result, uut.getKeys());
+            assertEquals(null, uut.getKeyOrDefault("null_null", "default"));
+            // add a few more keys
+            uut.setKey("null_str", "null");
+            expected_result.add("null_str");
+            assertEquals(expected_result, uut.getKeys());
+            assertEquals("null", uut.getKeyOrDefault("null_str", "default"));
+            // ensure persistence
+            uut.close();
+            uut = new ConfigFile(new ConfigFinder(getClass(), "jConfigFile_ConfigFileTest_testKeySet").searchForConfig());
+            assertEquals(expected_result, uut.getKeys());
+            assertEquals("null_str", uut.getKeyOrDefault("null", "default"));
+            assertEquals("null_null", uut.getKeyOrDefault(null, "default"));
+            assertEquals("null", uut.getKeyOrDefault("null_str", "default"));
+            assertEquals(null, uut.getKeyOrDefault("null_null", "default"));
+            // clean up
+            uut.removeKey(null);
+            uut.removeKey("null");
+            uut.removeKey("null_str");
+            uut.removeKey("null_null");
+            uut.close();
+        });
+    }
+    
+    @Test
     public void testEncodeDecode() {
         assertDoesNotThrow(() -> {
             assertEquals("3132333435", ConfigFile.encode("12345"));
