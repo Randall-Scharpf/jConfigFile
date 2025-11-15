@@ -132,7 +132,7 @@ public class FindOrCreateConfigAsyncTestHeadless {
         String originalUserHome = System.getProperty("user.home");
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             callWithInteractionsInHelper(SystemStreamTester.CREATE_NEW_FILE_INTERACTIONS(ConfigLocation.USERPROFILE));
             fail("Expected IO exception to be thrown");
         } catch (InterruptedException ex) {
@@ -244,7 +244,7 @@ public class FindOrCreateConfigAsyncTestHeadless {
             template.setKey("fileId", fileId);
             template.close();
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             callWithInteractionsInHelper(SystemStreamTester.CREATE_COPY_INTERACTIONS(ConfigLocation.USERPROFILE, templateFile.getPath()));
             fail("Expected IO exception to be thrown");
         } catch (InterruptedException ex) {
@@ -267,12 +267,12 @@ public class FindOrCreateConfigAsyncTestHeadless {
         });
     }
 
-    @Test
+    @ParameterizedTest
     @EnumSource(ConfigLocation.class)
     public void testInvalidTemplateInput(ConfigLocation loc) {
         String[] invalidPaths = {
             standardLocator.configAt(loc).getParentFile().getParent(),
-            "https://error-path"
+            "\0 error path \0"
         };
         for (String path : invalidPaths) {
             assertDoesNotThrow(() -> {

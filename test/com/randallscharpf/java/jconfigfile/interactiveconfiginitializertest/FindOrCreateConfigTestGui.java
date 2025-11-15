@@ -116,7 +116,7 @@ public class FindOrCreateConfigTestGui {
         String originalUserHome = System.getProperty("user.home");
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
                 assertThrows(java.io.IOException.class, () -> {
                     InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");
@@ -208,7 +208,7 @@ public class FindOrCreateConfigTestGui {
         String originalUserHome = System.getProperty("user.home");
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
                 assertThrows(java.io.IOException.class, () -> {
                     InteractiveConfigInitializer.findOrCreateConfig(getClass(), "jConfigFile_InteractiveConfigInitializerTest");

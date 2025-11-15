@@ -201,7 +201,7 @@ public class FindOrCreateConfigAsyncWithFallbackTestGui {
         String originalUserHome = System.getProperty("user.home");
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             guiTester.awaitAndAcknowledgeDialog();
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
                 callbackRan = false;
@@ -386,7 +386,7 @@ public class FindOrCreateConfigAsyncWithFallbackTestGui {
         String originalUserHome = System.getProperty("user.home");
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             guiTester.awaitAndAcknowledgeDialog();
             Config cfg = guiTester.callSyncExpectPopup(ConfigLocation.USERPROFILE, () -> {
                 callbackRan = false;

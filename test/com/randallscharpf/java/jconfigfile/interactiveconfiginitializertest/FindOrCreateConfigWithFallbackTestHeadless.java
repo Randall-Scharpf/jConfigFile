@@ -117,7 +117,7 @@ public class FindOrCreateConfigWithFallbackTestHeadless {
         String originalUserHome = System.getProperty("user.home");
         try {
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             Config result = callWithInteractionsInHelper(SystemStreamTester.CREATE_NEW_FILE_ERROR_INTERACTIONS(ConfigLocation.USERPROFILE));
             assertInstanceOf(ConfigMap.class, result);
         } catch (InterruptedException ex) {
@@ -205,7 +205,7 @@ public class FindOrCreateConfigWithFallbackTestHeadless {
             template.setKey("fileId", fileId);
             template.close();
             // Break USERPROFILE by redirecting it to an invalid path and ensure we get an error
-            System.setProperty("user.home", "https://error-path");
+            System.setProperty("user.home", "\0 error path \0");
             Config result = callWithInteractionsInHelper(SystemStreamTester.CREATE_COPY_ERROR_INTERACTIONS(ConfigLocation.USERPROFILE, templateFile.getPath()));
             assertInstanceOf(ConfigMap.class, result);
         } catch (InterruptedException | IOException ex) {
@@ -226,12 +226,12 @@ public class FindOrCreateConfigWithFallbackTestHeadless {
         });
     }
 
-    @Test
+    @ParameterizedTest
     @EnumSource(ConfigLocation.class)
     public void testInvalidTemplateInput(ConfigLocation loc) {
         String[] invalidPaths = {
             standardLocator.configAt(loc).getParentFile().getParent(),
-            "https://error-path"
+            "\0 error path \0"
         };
         for (String path : invalidPaths) {
             assertDoesNotThrow(() -> {
