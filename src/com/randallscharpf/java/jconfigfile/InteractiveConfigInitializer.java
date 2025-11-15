@@ -131,8 +131,10 @@ public class InteractiveConfigInitializer {
         try {
             Config cfg = findOrCreateConfig(callee, configName);
             if (cfg == null) {
-                String message = "User canceled config initializer without creating config file"
-                        + "\nConfiguration changes will not be persistent.";
+                String message =
+                        "User canceled config initializer without creating config file" +
+                        System.getProperty("line.separator") +
+                        "Configuration changes will not be persistent.";
                 if (java.awt.GraphicsEnvironment.isHeadless()) {
                     System.err.println(message);
                 } else {
@@ -142,8 +144,10 @@ public class InteractiveConfigInitializer {
             }
             return cfg;
         } catch (IOException ex) {
-            String message = "Failed to open config file with message: " + ex.getMessage()
-                    + "\nConfiguration changes will not be persistent.";
+            String message =
+                    "Failed to open config file with message: " + ex.getMessage() +
+                    System.getProperty("line.separator") +
+                    "Configuration changes will not be persistent.";
             if (java.awt.GraphicsEnvironment.isHeadless()) {
                 System.err.println(message);
             } else {
@@ -179,16 +183,20 @@ public class InteractiveConfigInitializer {
         findOrCreateConfigAsync(callee, configName, (res, err) -> {
             if (res == null) {
                 if (err != null) {
-                    String message = "Failed to open config file with message: " + err.getMessage()
-                            + "\nConfiguration changes will not be persistent.";
+                    String message =
+                            "Failed to open config file with message: " + err.getMessage() +
+                            System.getProperty("line.separator") +
+                            "Configuration changes will not be persistent.";
                     if (java.awt.GraphicsEnvironment.isHeadless()) {
                         System.err.println(message);
                     } else {
                         JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    String message = "User canceled config initializer without creating config file"
-                            + "\nConfiguration changes will not be persistent.";
+                    String message =
+                            "User canceled config initializer without creating config file" +
+                            System.getProperty("line.separator") +
+                            "Configuration changes will not be persistent.";
                     if (java.awt.GraphicsEnvironment.isHeadless()) {
                         System.err.println(message);
                     } else {

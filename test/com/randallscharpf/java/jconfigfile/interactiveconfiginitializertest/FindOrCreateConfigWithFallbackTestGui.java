@@ -161,7 +161,7 @@ public class FindOrCreateConfigWithFallbackTestGui {
             templateFile.delete();
         });
     }
-    
+
     @Test
     public void testCreateCopyAndCancelSelection() {
         assertDoesNotThrow(() -> {

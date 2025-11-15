@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -277,7 +278,7 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
             throw error;
         }
     }
-    
+
     private void createBlankButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createBlankButtonActionPerformed
         ConfigLocation choice;
         synchronized (stateKey) {
@@ -299,8 +300,15 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
         }
         new Thread(() -> {
             try {
-                ConfigFile cf = new ConfigFile(finder.configAt(choice));
-                callback.accept(cf, null);
+                try {
+                    File newfile = finder.configAt(choice);
+                    Files.deleteIfExists(newfile.toPath());
+                    ConfigFile cf = new ConfigFile(newfile);
+                    callback.accept(cf, null);
+                } catch (RuntimeException ex) {
+                    // java.nio.file.Files throws unchecked exceptions for certain errors
+                    callback.accept(null, new IOException(ex));
+                }
             } catch (IOException ex) {
                 callback.accept(null, ex);
             }
@@ -335,11 +343,12 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
                 File newfile = finder.configAt(choice);
                 try {
                     newfile.getParentFile().mkdirs();
-                    Files.copy(oldfile.toPath(), newfile.toPath());
+                    Files.copy(oldfile.toPath(), newfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     ConfigFile cf_new = new ConfigFile(newfile);
                     closeSelf();
                     callback.accept(cf_new, null);
-                } catch (IOException | java.nio.file.InvalidPathException ex) {
+                } catch (IOException | RuntimeException ex) {
+                    // java.nio.file.Files throws unchecked exceptions for certain errors
                     closeSelf();
                     callback.accept(null, new IOException(ex));
                 }
@@ -521,11 +530,11 @@ public class ConfigInitializerDialog extends javax.swing.JFrame {
      */
     public void setDropdownSelection(ConfigLocation location) {
         java.awt.EventQueue.invokeLater(() -> {
-            for (Map.Entry<String, ConfigLocation> entry : comboBoxLocations.entrySet()) {
-                if (entry.getValue() == location) {
-                    locationComboBox.setSelectedItem(entry.getKey());
+            comboBoxLocations.forEach((key, value) -> {
+                if (value == location) {
+                    locationComboBox.setSelectedItem(key);
                 }
-            }
+            });
         });
     }
 

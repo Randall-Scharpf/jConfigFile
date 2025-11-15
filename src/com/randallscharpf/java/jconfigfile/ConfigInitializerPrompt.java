@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
@@ -47,7 +47,7 @@ public class ConfigInitializerPrompt {
     }
 
     private final ConfigFinder finder;
-    private final Scanner userInputScanner;
+    private final InputStream userInput;
     private final PrintStream userOutput;
     private final PrintStream userErrors;
 
@@ -70,7 +70,7 @@ public class ConfigInitializerPrompt {
      */
     public ConfigInitializerPrompt(ConfigFinder finder, InputStream userInput, PrintStream userOutput, PrintStream userErrors) {
         this.finder = finder;
-        this.userInputScanner = new Scanner(userInput);
+        this.userInput = userInput;
         this.userOutput = userOutput;
         this.userErrors = userErrors;
 
@@ -167,35 +167,72 @@ public class ConfigInitializerPrompt {
             submenuCancelled = false;
             String copy = prompt(
                     "Is there an existing file to use to import configuration settings? Valid options are YES and NO",
-                    (str) -> { return "YES".equals(str) || "NO".equals(str); }
+                    (str) -> {
+                        return "YES".equals(str) || "NO".equals(str);
+                    }
             );
             if (copy == null) return null;
             if ("YES".equals(copy)) {
-                String oldfile = prompt("  ", "Enter the file path to copy", (path) -> { return new File(path).exists(); });
+                String oldfile = prompt("  ", "Enter the file path to copy",
+                        (path) -> {
+                            File f = new File(path);
+                            return f.exists() && f.isFile();
+                        }
+                );
                 if (oldfile == null) {
                     submenuCancelled = true;
                 } else {
-                    newfile.getParentFile().mkdirs();
-                    Files.copy(new File(oldfile).toPath(), newfile.toPath());
+                    try {
+                        newfile.getParentFile().mkdirs();
+                        Files.copy(new File(oldfile).toPath(), newfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (RuntimeException ex) {
+                        // java.nio.file.Files throws unchecked exceptions for certain errors
+                        throw new IOException(ex);
+                    }
+                }
+            } else {
+                try {
+                    Files.deleteIfExists(newfile.toPath());
+                } catch (RuntimeException ex) {
+                    // java.nio.file.Files throws unchecked exceptions for certain errors
+                    throw new IOException(ex);
                 }
             }
         } while (submenuCancelled);
         return new ConfigFile(newfile);
     }
     
-    private String prompt(String query, Predicate<String> validator) {
+    private String prompt(String query, Predicate<String> validator) throws IOException {
         return prompt("", query, validator);
     }
 
-    private String prompt(String prefix, String query, Predicate<String> validator) {
+    private String prompt(String prefix, String query, Predicate<String> validator) throws IOException {
         String resp = null;
         do {
             if (resp != null) {
                 userErrors.println(prefix + "Input \"" + resp + "\" was not accepted");
+                userErrors.flush();
             }
             userOutput.println(prefix + query + " (or type 'cancel')");
-            System.out.print(prefix);
-            resp = userInputScanner.nextLine();
+            userOutput.print(prefix);
+            userOutput.flush();
+            resp = "";
+            int next = userInput.read();
+            boolean withheldR = false;
+            while (next != '\n') {
+                if (withheldR) {
+                    resp += '\r';
+                    withheldR = false;
+                }
+                if (next == '\r') {
+                    withheldR = true;
+                } else {
+                    if (next != -1) {
+                        resp += (char) next;
+                    }
+                }
+                next = userInput.read();
+            }
             if ("cancel".equals(resp)) {
                 return null;
             }

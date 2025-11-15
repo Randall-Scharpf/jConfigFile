@@ -212,7 +212,7 @@ public class FindOrCreateConfigAsyncTestGui {
                         "jConfigFile_InteractiveConfigInitializerTest",
                         (res, err) -> {
                             assertNull(res);
-                            assertInstanceOf(java.io.IOException.class, err);
+                            assertNotNull(assertInstanceOf(java.io.IOException.class, err));
                             synchronized (callbackLock) {
                                 callbackRan = true;
                                 callbackLock.notifyAll();
@@ -399,7 +399,7 @@ public class FindOrCreateConfigAsyncTestGui {
                         "jConfigFile_InteractiveConfigInitializerTest",
                         (res, err) -> {
                             assertNull(res);
-                            assertInstanceOf(java.io.IOException.class, err);
+                            assertNotNull(assertInstanceOf(java.io.IOException.class, err));
                             synchronized (callbackLock) {
                                 callbackRan = true;
                                 callbackLock.notifyAll();

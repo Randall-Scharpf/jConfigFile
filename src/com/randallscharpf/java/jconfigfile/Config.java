@@ -99,4 +99,11 @@ public interface Config extends Closeable {
      * @throws IOException if an I/O error occurs while pushing changes to persistent memory
      */
     public void save() throws IOException;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException;
+    
 }
