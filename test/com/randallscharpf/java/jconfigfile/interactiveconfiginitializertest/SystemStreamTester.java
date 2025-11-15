@@ -185,7 +185,7 @@ public class SystemStreamTester {
         Queue<Integer> outputBytes = new ArrayDeque<>();
         Queue<Integer> errorBytes = new ArrayDeque<>();
         for (Interaction chunk : expectedBehavior) {
-            if (!chunk.data.trim().isEmpty()) {
+            if ((chunk.data != null) && (!chunk.data.trim().isEmpty())) {
                 systemOutput.println("Validating " + chunk.stream + "\t" + chunk.type + ":  \t" + chunk.data);
             }
             switch (chunk.stream) {
