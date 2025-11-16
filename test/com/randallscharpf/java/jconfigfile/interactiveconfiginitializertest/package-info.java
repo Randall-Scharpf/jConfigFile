@@ -47,9 +47,8 @@
  * </li>
  * </ul>
  * 
- * Note that because these tests validate complex entry-point functions which handle
- * a variety of features, they are closer to end-to-end tests than unit tests; they
- * are included in the unit testing package primarily because they use assertions
- * and test fixtures from jUnit.
+ * Note that these tests use assertions and test fixtures from jUnit and are executed
+ * as unit tests, but really serve as end-to-end tests of the library that operate
+ * through its typical API entry points.
  */
 package com.randallscharpf.java.jconfigfile.interactiveconfiginitializertest;

@@ -14,7 +14,7 @@ public class TestGui extends javax.swing.JFrame {
 
     public TestGui() {
         initComponents();
-        conf = InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jconfigfilesandbox");
+        conf = InteractiveConfigInitializer.findOrCreateConfigWithFallback(getClass(), "jConfigFile_TestGui");
     }
 
     @SuppressWarnings("unchecked")
@@ -115,7 +115,12 @@ public class TestGui extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_formWindowClosing
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) {
+        if (java.awt.GraphicsEnvironment.isHeadless()) {
+            System.out.println("ERROR: cannot run test GUI in headless environment");
+            return;
+        }
+
         /* Set the system look and feel, falling back to Nimbus */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -133,7 +138,7 @@ public class TestGui extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(TestGui.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        
+
         TestGui testGui = new TestGui();
         testGui.setVisible(true);
     }

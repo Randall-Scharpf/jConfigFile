@@ -56,6 +56,25 @@
         <jar jarfile="${DIST}/jar/jConfigFile.jar" basedir="${BUILD}"/>
     </target>
 
+    <target name="sample_apps" depends="compile_test">
+        <mkdir dir="${DIST}/jar"/>
+        <jar jarfile="${DIST}/jar/TestCLI.jar" basedir="${BUILD}">
+            <manifest>
+                <attribute name="Main-Class" value="com.randallscharpf.java.jconfigfile.applications.TestCli"/>
+            </manifest>
+        </jar>
+        <jar jarfile="${DIST}/jar/TestGUI.jar" basedir="${BUILD}">
+            <manifest>
+                <attribute name="Main-Class" value="com.randallscharpf.java.jconfigfile.applications.TestGui"/>
+            </manifest>
+        </jar>
+        <jar jarfile="${DIST}/jar/RunningAverage.jar" basedir="${BUILD}">
+            <manifest>
+                <attribute name="Main-Class" value="com.randallscharpf.java.jconfigfile.applications.RunningAverage"/>
+            </manifest>
+        </jar>
+    </target>
+
     <target name="unit_test" depends="compile_test">
         <mkdir dir="${TEST_RESULTS}"/>
         <junitlauncher printSummary="true">
@@ -71,13 +90,20 @@
         <fail message="Unit tests failed." if="unit_test_failed"/>
     </target>
 
-    <target name="integration_test" depends="compile_test">
-        <java fork="yes" classname="com.randallscharpf.java.jconfigfile.IntegrationTestMain">
-            <classpath>
-                <path refid="maven_deps"/>
-                <pathelement location="${BUILD}"/>
-            </classpath>
-        </java>
+    <target name="integration_test" depends="sample_apps">
+        <mkdir dir="${TEST_RESULTS}"/>
+        <java fork="yes" jar="${DIST}/jar/RunningAverage.jar" inputstring="100" output="${TEST_RESULTS}/RunningAverage_output.txt"/>
+        <java fork="yes" jar="${DIST}/jar/RunningAverage.jar" inputstring="300" output="${TEST_RESULTS}/RunningAverage_output.txt"/>
+        <echo
+            file="${TEST_RESULTS}/RunnningAverage_expected.txt"
+            message="Enter an integer:${line.separator}Running Average: 200.0000${line.separator}"
+        />
+        <condition property="integration_test_failed">
+            <not>
+                <filesmatch file1="${TEST_RESULTS}/RunningAverage_output.txt" file2="${TEST_RESULTS}/RunnningAverage_expected.txt"/>
+            </not>
+        </condition>
+        <fail message="Integration tests failed." if="integration_test_failed"/>
     </target>
 
     <target name="test" depends="unit_test, integration_test">
