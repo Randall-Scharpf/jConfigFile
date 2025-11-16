@@ -73,6 +73,7 @@
                 <attribute name="Main-Class" value="com.randallscharpf.java.jconfigfile.applications.RunningAverage"/>
             </manifest>
         </jar>
+        <copy file="${TEST}/com/randallscharpf/java/jconfigfile/applications/Documentation.xml" todir="${DIST}/jar"/>
     </target>
 
     <target name="unit_test" depends="compile_test">

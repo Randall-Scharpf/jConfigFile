@@ -1,0 +1,120 @@
+<applications>
+    <application name="RunningAverage">
+        <brief>
+            Takes one integer as input and outputs the average of the integers entered
+            into the program during both past and current executions.
+        </brief>
+        <description>
+            When the program is started, it uses standard output to request an integer
+            from the user. After receiving an integer over standard input, the program
+            refers to the configuration file for its installation using the jConfigFile
+            API. The program prints out the running average of integers sent to the
+            program over various executions. Finally, the program updates its configuration
+            file so that future executions will see the updated history of inputs to
+            the program.
+
+            This program is intented as a basic demonstration of how the jConfigFile API
+            might be used in practice, and performs limited I/O validation to ensure
+            the API use is clear. It is not intended for use in a user-facing environment.
+
+            The source of the program "main" function is as follows:
+            <code>
+                // read configured parameters for program execution
+                Config cfg = new ConfigFile(new ConfigFinder(RunningAverage.class, "RunningAverage").searchForConfig());
+                int count = Integer.parseInt(cfg.getKeyOrDefault("count", "0"));
+                double lastAverage = Double.parseDouble(cfg.getKeyOrDefault("avg", "0"));
+
+                // execute program
+                Scanner sc = new Scanner(System.in);
+                System.out.println("Enter an integer:");
+                int in = sc.nextInt();
+                double newAverage = (in + lastAverage * count) / (count + 1);
+                count++;
+                System.out.printf("Running Average: %.4f\n", newAverage);
+
+                // update settings for next program execution, then save and close config file
+                cfg.setKey("count", String.valueOf(count));
+                cfg.setKey("avg", String.format("%.6f", newAverage));
+                cfg.close();
+            </code>
+        </description>
+        <usage>
+            $ java -jar RunningAverage.jar
+            <b>Enter an integer:</b>
+            100
+            <b>Running Average: 100.0000</b>
+            $ java -jar RunningAverage.jar
+            <b>Enter an integer:</b>
+            300
+            <b>Running Average: 200.0000</b>
+            $
+        </usage>
+        <mainclass>
+            com.randallscharpf.java.jconfigfile.applications.RunningAverage
+        </mainclass>
+    </application>
+    <application name="TestCLI">
+        <brief>
+            Provides a command-line interface through which a user can edit a persistent
+            key-value store backed by the jConfigFile API.
+        </brief>
+        <description>
+            The first time the program is run, the user is walked through the set-up
+            process for the application configuration file. This process runs in
+            the same way as the jConfigFile entry point API, InteractiveConfigInitializer,
+            except in that it never uses the graphical display to interact with users,
+            even when a display is available.
+
+            After initial setup, the program handles read and write commands sent
+            from the user. All interaction is done over the standard input and output
+            terminals.
+        </description>
+        <usage>
+            $ java -jar TestCLI.jar
+            <b>Select a location to place this application's config file. Valid options are APPDATA, ETC, USERPROFILE, DOCUMENTS, and SIBLING (or type 'cancel')</b>
+            APPDATA
+            <b>Is there an existing file to use to import configuration settings? Valid options are YES and NO (or type 'cancel')</b>
+            NO
+            <b>Starting CLI for jConfigFile...</b>
+            <b>&gt; </b>READ test_key
+            <b>No value found for key `test_key`</b>
+            <b>&gt; </b>WRITE test_key cli_wuz_here
+            <b>Wrote value `cli_wuz_here` for key `test_key`</b>
+            <b>&gt; </b>EXIT
+
+            $ java -jar TestCLI.jar
+            <b>Starting CLI for jConfigFile...</b>
+            <b>&gt; </b>READ test_key
+            <b>Value `cli_wuz_here` found for key `test_key`</b>
+            <b>&gt; </b>EXIT
+
+            $
+        </usage>
+        <mainclass>
+            com.randallscharpf.java.jconfigfile.applications.TestCli
+        </mainclass>
+    </application>
+    <application name="TestGUI">
+        <brief>
+            Provides a graphical interface through which a user can edit a persistent
+            key-value store backed by the jConfigFile API.
+        </brief>
+        <description>
+            The first time the program is run, the user is walked through the set-up
+            process for the application configuration file. This process runs in
+            the same way as the jConfigFile entry point API, InteractiveConfigInitializer.
+            Because this program is GUI-based, it will fail in a headless environment
+            (and consequently, the initializtion process always occurs graphically).
+
+            After initial setup, the program handles read and write commands sent
+            from the user. A minimal dialog with buttons for reading and writing
+            handles commands sent by the user.
+        </description>
+        <usage>
+            Usage instructions provided within GUI
+        </usage>
+        <mainclass>
+            com.randallscharpf.java.jconfigfile.applications.TestGui
+        </mainclass>
+    </application>
+</applications>
